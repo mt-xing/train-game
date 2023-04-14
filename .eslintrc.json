@@ -55,34 +55,34 @@
 	  "no-useless-return": "off",
 	  "no-await-in-loop": "off",
 	  "import/extensions": [
-		"error",
-		{
-		  "js": "never"
-		}
+			"error",
+			{
+				"js": "never"
+			}
 	  ],
 	  "no-else-return": "off",
 	  "no-continue": "off",
 	  "func-names": "off",
 	  "no-void": "off",
 	  "import/no-extraneous-dependencies": [
-		"off"
+			"off"
 	  ],
 	  "comma-dangle": "off",
 	  "@typescript-eslint/comma-dangle": [
-		"error",
-		"only-multiline"
+			"error",
+			"only-multiline"
 	  ],
 	  "no-unused-vars": "off",
 	  "@typescript-eslint/no-unused-vars": [
-		"error",
-		{
-		  "argsIgnorePattern": "^_",
-		  "varsIgnorePattern": "^_"
-		}
+			"error",
+			{
+				"argsIgnorePattern": "^_",
+				"varsIgnorePattern": "^_"
+			}
 	  ],
 	  "space-infix-ops": "off",
 	  "@typescript-eslint/space-infix-ops": [
-		"error"
+			"error"
 	  ]
 	}
 }
