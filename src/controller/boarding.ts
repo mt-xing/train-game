@@ -26,7 +26,9 @@ function trainServesDest(
 	if (paxConfig.timing === 'airport' && !train.airport) { return false; }
 
 	if (train.type === 'ltd exp' && paxConfig.timing !== 'ltd exp') {
-		return false;
+		if (!train.airport || paxConfig.timing !== 'airport') {
+			return false;
+		}
 	}
 
 	if (Array.isArray(paxConfig.timing)) {

@@ -24,6 +24,7 @@ const trainBase: TrainConfig = {
 };
 const trainRapid = { ...trainBase, type: 'rapid' as const };
 const trainExpress = { ...trainBase, type: 'express' as const };
+const trainLtdExp = { ...trainBase, type: 'ltd exp' as const };
 
 it('sorts by destination correctly', () => {
 	const pax = new Pax(paxBase);
@@ -104,4 +105,56 @@ it('handles express trains', () => {
 		{ ...trainRapid, uiTime: 6 }, // Slower
 		{ ...trainExpress, uiTime: 15 }, // Slower
 	], null)).toBe(true);
+});
+
+it('handles limited express trains', () => {
+	const paxLtd = new Pax({ ...paxBase, timing: 'ltd exp' });
+	expect(canBoard(paxLtd, trainBase, 0, [], null)).toBe('slowLtdExp');
+	expect(canBoard(paxLtd, trainRapid, 0, [], null)).toBe('slowLtdExp');
+	expect(canBoard(paxLtd, trainExpress, 0, [], null)).toBe('slowLtdExp');
+
+	expect(canBoard(paxLtd, trainLtdExp, 0, [], null)).toBe('costUnpaid');
+
+	paxLtd.payUpchargeLtdExp();
+	expect(canBoard(paxLtd, trainBase, 0, [], null)).toBe('slowLtdExp');
+	expect(canBoard(paxLtd, trainRapid, 0, [], null)).toBe('slowLtdExp');
+	expect(canBoard(paxLtd, trainExpress, 0, [], null)).toBe('slowLtdExp');
+	expect(canBoard(paxLtd, trainLtdExp, 0, [], null)).toBe(true);
+
+	const slowPax = new Pax(paxBase);
+	expect(canBoard(slowPax, trainLtdExp, 0, [], null)).toBe(false);
+});
+
+it('handles airport trains', () => {
+	const paxAirport = new Pax({ ...paxBase, timing: 'airport' });
+	expect(canBoard(paxAirport, trainBase, 0, [], null)).toBe(false);
+	expect(canBoard(paxAirport, trainRapid, 0, [], null)).toBe(false);
+	expect(canBoard(paxAirport, trainExpress, 0, [], null)).toBe(false);
+	expect(canBoard(paxAirport, trainLtdExp, 0, [], null)).toBe(false);
+	expect(canBoard(paxAirport, { ...trainBase, airport: true }, 0, [], null)).toBe(true);
+	expect(canBoard(paxAirport, { ...trainRapid, airport: true }, 0, [], null)).toBe(true);
+	expect(canBoard(paxAirport, { ...trainExpress, airport: true }, 0, [], null)).toBe(true);
+	expect(canBoard(paxAirport, { ...trainLtdExp, airport: true }, 0, [], null)).toBe('costUnpaid');
+	paxAirport.payUpchargeLtdExp();
+	expect(canBoard(paxAirport, { ...trainLtdExp, airport: true }, 0, [], null)).toBe(true);
+	const slowPax = new Pax(paxBase);
+	expect(canBoard(slowPax, { ...trainBase, airport: true }, 0, [], null)).toBe(true);
+	expect(canBoard(slowPax, { ...trainRapid, airport: true }, 0, [], null)).toBe(false);
+	expect(canBoard(slowPax, { ...trainExpress, airport: true }, 0, [], null)).toBe(false);
+	const rapidPax = new Pax({ ...paxBase, timing: [2] });
+	expect(canBoard(rapidPax, { ...trainBase, airport: true }, 0, [], null)).toBe(true);
+	expect(canBoard(rapidPax, { ...trainRapid, airport: true }, 0, [], null)).toBe(true);
+	expect(canBoard(rapidPax, { ...trainExpress, airport: true }, 0, [], null)).toBe(false);
+	const expPax = new Pax({ ...paxBase, timing: [20, 7] });
+	expect(canBoard(expPax, { ...trainBase, airport: true }, 0, [
+		{ ...trainRapid, uiTime: 6 }
+	], null)).toBe('slow');
+	expect(canBoard(expPax, { ...trainRapid, airport: true }, 0, [], null)).toBe(true);
+	expect(canBoard(expPax, { ...trainExpress, airport: true }, 0, [], null)).toBe(true);
+
+	const ltdExpPax = new Pax({ ...paxBase, timing: 'ltd exp' });
+	expect(canBoard(ltdExpPax, { ...trainLtdExp, airport: true }, 0, [], null)).toBe('costUnpaid');
+	ltdExpPax.payUpchargeLtdExp();
+	expect(canBoard(ltdExpPax, { ...trainLtdExp, airport: true }, 0, [], null)).toBe(true);
+	expect(canBoard(ltdExpPax, { ...trainRapid, airport: true }, 0, [], null)).toBe('slowLtdExp');
 });
