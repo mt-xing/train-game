@@ -6,7 +6,7 @@ const paxBase: PaxConfig = {
 	destination: 'test',
 	timing: [],
 	blue: false,
-	reservation: null,
+	reservation: false,
 	women: false,
 	handicap: false,
 };
@@ -157,4 +157,83 @@ it('handles airport trains', () => {
 	ltdExpPax.payUpchargeLtdExp();
 	expect(canBoard(ltdExpPax, { ...trainLtdExp, airport: true }, 0, [], null)).toBe(true);
 	expect(canBoard(ltdExpPax, { ...trainRapid, airport: true }, 0, [], null)).toBe('slowLtdExp');
+});
+
+it('discriminates on gender', () => {
+	const paxM = new Pax(paxBase);
+	const paxF = new Pax({ ...paxBase, women: true });
+
+	const train = { ...trainBase, women: [1] };
+	expect(canBoard(paxM, train, 0, [], null)).toBe(true);
+	expect(canBoard(paxF, train, 0, [], null)).toBe(true);
+	expect(canBoard(paxM, train, 1, [], null)).toBe('carIllegal');
+	expect(canBoard(paxF, train, 1, [], null)).toBe(true);
+
+	const train2 = { ...trainBase, women: [2, 3] };
+	expect(canBoard(paxM, train2, 0, [], null)).toBe(true);
+	expect(canBoard(paxF, train2, 0, [], null)).toBe(true);
+	expect(canBoard(paxM, train2, 1, [], null)).toBe(true);
+	expect(canBoard(paxF, train2, 1, [], null)).toBe(true);
+	expect(canBoard(paxM, train2, 2, [], null)).toBe('carIllegal');
+	expect(canBoard(paxF, train2, 2, [], null)).toBe(true);
+	expect(canBoard(paxM, train2, 3, [], null)).toBe('carIllegal');
+	expect(canBoard(paxF, train2, 3, [], null)).toBe(true);
+
+	const paxHandicap = new Pax({ ...paxBase, handicap: true });
+	expect(canBoard(paxHandicap, train2, 0, [], 1)).toBe('carDelay');
+	expect(canBoard(paxHandicap, train2, 1, [], 1)).toBe(true);
+	expect(canBoard(paxHandicap, train2, 2, [], 1)).toBe('carDelay');
+	expect(canBoard(paxHandicap, train2, 3, [], 3)).toBe(true);
+});
+
+it('complies with ada', () => {
+	const pax = new Pax(paxBase);
+	const paxHandicap = new Pax({ ...paxBase, handicap: true });
+
+	expect(canBoard(pax, trainBase, 0, [], null)).toBe(true);
+	expect(canBoard(paxHandicap, trainBase, 0, [], null)).toBe('carDelay');
+	expect(canBoard(pax, trainBase, 0, [], 0)).toBe(true);
+	expect(canBoard(paxHandicap, trainBase, 0, [], 0)).toBe(true);
+	expect(canBoard(pax, trainBase, 2, [], 1)).toBe(true);
+	expect(canBoard(paxHandicap, trainBase, 2, [], 1)).toBe('carDelay');
+});
+
+it('reserves seats', () => {
+	const paxCheap = new Pax(paxBase);
+	const paxRes = new Pax({ ...paxBase, reservation: true });
+	const train = { ...trainBase, reserved: [2, 3] };
+	const trainAll = { ...trainBase, reserved: true };
+
+	expect(canBoard(paxCheap, train, 1, [], null)).toBe(true);
+	expect(canBoard(paxCheap, train, 2, [], null)).toBe('costUndesired');
+	expect(canBoard(paxCheap, trainAll, 0, [], null)).toBe('costUndesired');
+	expect(canBoard(paxRes, trainBase, 0, [], null)).toBe('costDidntGetDesired');
+	expect(canBoard(paxRes, train, 1, [], null)).toBe('costDidntGetDesired');
+	expect(canBoard(paxRes, train, 2, [], null)).toBe('costUnpaid');
+	expect(canBoard(paxRes, trainAll, 0, [], null)).toBe('costUnpaid');
+
+	paxRes.payUpchargeReserved(2);
+	expect(canBoard(paxRes, trainBase, 1, [], null)).toBe('costOverpaid');
+	expect(canBoard(paxRes, train, 2, [], null)).toBe(true);
+	expect(canBoard(paxRes, train, 3, [], null)).toBe('carWrongReserved');
+	expect(canBoard(paxRes, train, 1, [], null)).toBe('costReservedGotNonreserved');
+	expect(canBoard(paxRes, trainAll, 0, [], null)).toBe('carWrongReserved');
+	expect(canBoard(paxRes, trainAll, 1, [], null)).toBe('carWrongReserved');
+	expect(canBoard(paxRes, trainAll, 2, [], null)).toBe(true);
+	expect(canBoard(paxRes, trainAll, 3, [], null)).toBe('carWrongReserved');
+});
+
+it('segregates on class (blue car)', () => {
+	const paxCheap = new Pax(paxBase);
+	const paxBlue = new Pax({ ...paxBase, blue: true });
+	const train = { ...trainBase, blue: [2, 3] };
+
+	expect(canBoard(paxCheap, train, 1, [], null)).toBe(true);
+	expect(canBoard(paxCheap, train, 2, [], null)).toBe('costUndesired');
+
+	expect(canBoard(paxBlue, train, 1, [], null)).toBe('costDidntGetDesired');
+	expect(canBoard(paxBlue, train, 2, [], null)).toBe('costUnpaid');
+	paxBlue.payUpchargeBlue();
+	expect(canBoard(paxBlue, train, 1, [], null)).toBe('costOverpaid');
+	expect(canBoard(paxBlue, train, 2, [], null)).toBe(true);
 });

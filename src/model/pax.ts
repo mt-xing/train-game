@@ -3,7 +3,7 @@ export type PaxConfig = {
 	/** Local, Rapid, Express (local, rapid), or other */
 	timing: [] | [number] | [number, number] | 'airport' | 'ltd exp';
 	blue: boolean;
-	reservation: null | number;
+	reservation: boolean;
 	women: boolean;
 	handicap: boolean;
 }
@@ -33,25 +33,22 @@ export default class Pax {
 	get upchargePaidReserved() { return this.upchargedReserved; }
 
 	payUpchargeBlue() {
-		if (this.upchargedBlue) {
-			return false;
-		}
+		if (!this.config.blue) { return false; }
+		if (this.upchargedBlue) { return false; }
 		this.upchargedBlue = true;
 		return true;
 	}
 
 	payUpchargeLtdExp() {
-		if (this.upchargedLtdExp) {
-			return false;
-		}
+		if (this.config.timing !== 'ltd exp' && this.config.timing !== 'airport') { return false; }
+		if (this.upchargedLtdExp) { return false; }
 		this.upchargedLtdExp = true;
 		return true;
 	}
 
 	payUpchargeReserved(car: number) {
-		if (this.upchargedReserved) {
-			return false;
-		}
+		if (!this.config.reservation) { return false; }
+		if (this.upchargedReserved) { return false; }
 		this.upchargedReserved = car;
 		return true;
 	}

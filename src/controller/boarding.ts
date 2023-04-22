@@ -87,7 +87,7 @@ function undesiredUpcharge(
 
 	if (train.reserved === true || (train.reserved !== false && train.reserved.includes(car))) {
 		// Got on a reserved car
-		if (paxConfig.reservation === null) {
+		if (!paxConfig.reservation) {
 			return 'costUndesired';
 		}
 		if (pax.upchargePaidReserved === null) {
@@ -101,13 +101,14 @@ function undesiredUpcharge(
 		if (pax.upchargePaidReserved !== null) {
 			return train.reserved !== false ? 'costReservedGotNonreserved' : 'costOverpaid';
 		}
-		if (paxConfig.reservation !== null) {
+		if (paxConfig.reservation) {
 			didntGetDesired = true;
 		}
 	}
 
 	if (train.type === 'ltd exp') {
 		if (!pax.upchargePaidLtdExp) {
+			// Airport pax can take ltd exp; all others aren't served by ltd exp
 			return 'costUnpaid';
 		}
 	}
