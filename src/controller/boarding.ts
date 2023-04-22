@@ -128,7 +128,9 @@ function trainSlow(
 
 	if (train.type !== 'ltd exp') {
 		if (paxConfig.timing === 'ltd exp') {
-			return 'slowLtdExp';
+			if (departureBoard.some((x) => x.type === 'ltd exp')) {
+				return 'slowLtdExp';
+			}
 		}
 	}
 
@@ -226,7 +228,6 @@ export function canBoard(
 	default:
 		return upcharge;
 	}
-	if (upcharge !== null) { return upcharge; }
 
 	// Illegal (women-only) - BAD
 	const illegalWomen = train.women?.includes(car) && !paxConfig.women && !paxConfig.handicap;
@@ -239,8 +240,11 @@ export function canBoard(
 	// Non-Handicap - MEDIUM
 	if (paxConfig.handicap && car !== handicapCar) { return 'carDelay'; }
 
+	// Didn't get desired upcharge - MEDIUM
+	if (upcharge === 'costDidntGetDesired') { return 'costDidntGetDesired'; }
+
 	// Wrong Car (reserved) - LOW
-	if (upcharge === 'costDidntGetDesired') { return 'carWrongReserved'; }
+	if (upcharge === 'carWrongReserved') { return 'carWrongReserved'; }
 
 	return true;
 }
