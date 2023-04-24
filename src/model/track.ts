@@ -1,4 +1,4 @@
-import { trainAccelerateTime, trainStallTime } from '../balance/balanceConsts';
+import { trainAccelerateTime, trainStallTime } from '../consts/balanceConsts';
 import { assertUnreachable } from '../utils';
 import Train, { TrainConfig } from './train';
 
@@ -31,6 +31,17 @@ export default class Track {
 		if (gap < trainStallTime + 2 * trainAccelerateTime) {
 			throw new Error('Train gap too small');
 		}
+
+		// Compute trains
+		const setup = trains.reduce((a, x) => {
+			// TODO
+			throw new Error('TODO');
+		}, {
+			maxCars: 0,
+			maxDoors: 0,
+			carLengths: [],
+			doorNums: [],
+		});
 	}
 
 	step(newTime: number) {

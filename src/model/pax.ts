@@ -1,4 +1,4 @@
-import { walkSpeed } from '../balance/balanceConsts';
+import { walkSpeed } from '../consts/balanceConsts';
 import { distance, Pos, step } from '../utils';
 
 export type PaxConfig = {
