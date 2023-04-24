@@ -64,6 +64,7 @@
 	  "no-continue": "off",
 	  "func-names": "off",
 	  "no-void": "off",
+		"function-paren-newline": ["error", "consistent"],
 	  "import/no-extraneous-dependencies": [
 			"off"
 	  ],

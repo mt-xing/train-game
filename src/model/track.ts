@@ -1,10 +1,8 @@
+import { trainAccelerateTime, trainStallTime } from '../balance/balanceConsts';
 import { assertUnreachable } from '../utils';
 import Train, { TrainConfig } from './train';
 
-export const trainStallTime = 10000;
-export const trainAccelerateTime = 5000;
-
-export class Track {
+export default class Track {
 	/** Remaining trains in backwards order; next train is last item */
 	private trains: TrainConfig[];
 
