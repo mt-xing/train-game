@@ -4,16 +4,16 @@ import { Pos } from '../utils';
 import Pax from './pax';
 import { TrainConfig } from './train';
 
-export type BoardingPosConfig = {
-	type: TrainConfig['type'];
-	maxDoors: number;
-	minCars: number;
-}
+export type BoardingPosType = TrainConfig['type'] | 'airport';
 
 const maxQueueLength = (platformWidth - queueGap) / 2;
 
 export class BoardingPos {
-	private cfg: BoardingPosConfig;
+	private t: BoardingPosType;
+
+	private doors: Set<number>;
+
+	private cars: Set<number>;
 
 	private pax: Pax[];
 
@@ -22,14 +22,26 @@ export class BoardingPos {
 	/** True = +y, False = -y */
 	private dir: boolean;
 
-	constructor(config: BoardingPosConfig, pos: Pos, growsInPlusY: boolean) {
-		this.cfg = config;
+	constructor(
+		type: BoardingPosType, doors: number[], cars: number[], pos: Pos, growsInPlusY: boolean
+	) {
+		this.t = type;
+		this.doors = new Set(doors);
+		this.cars = new Set(cars);
 		this.pax = [];
 		this.pos = pos;
 		this.dir = growsInPlusY;
 	}
 
-	get config() { return this.cfg; }
+	get type() { return this.t; }
+
+	get doorSet() { return this.doors.values(); }
+
+	get carSet() { return this.cars.values(); }
+
+	hasDoor(doorNum: number) { return this.doors.has(doorNum); }
+
+	hasCar(carNum: number) { return this.cars.has(carNum); }
 
 	enqueuePax(pax: Pax) {
 		this.pax.push(pax);
@@ -40,6 +52,27 @@ export class BoardingPos {
 			pax.queueTarget([this.pos[0], newY]);
 		} else {
 			// Too full; need to shuffle everyone
+			this.adjustAllPaxPosFull();
+		}
+	}
+
+	dequeuePax() {
+		const p = this.pax.shift();
+		this.readjustAllPax();
+		return p;
+	}
+
+	removePax(pax: Pax) {
+		this.pax = this.pax.filter((x) => x !== pax);
+		this.readjustAllPax();
+	}
+
+	private readjustAllPax() {
+		if (this.pax.length * defaultQueueGap <= maxQueueLength) {
+			this.pax.forEach((p, i) => {
+				p.queueTarget([this.pos[0], this.pos[1] + defaultQueueGap * i]);
+			});
+		} else {
 			this.adjustAllPaxPosFull();
 		}
 	}

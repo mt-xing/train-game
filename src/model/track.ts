@@ -1,5 +1,6 @@
 import { trainAccelerateTime, trainStallTime } from '../consts/balanceConsts';
 import { assertUnreachable } from '../utils';
+import { BoardingPos, BoardingPosType } from './boardingPos';
 import Train, { TrainConfig } from './train';
 
 export default class Track {
@@ -22,6 +23,9 @@ export default class Track {
 	/** Time to wait before first train */
 	private timeInitial: number;
 
+	/** List of all boarding positions, first by car, then door, then the list of queues */
+	private boardingPositions: BoardingPos[][][];
+
 	constructor(initial: number, gap: number, trains: TrainConfig[]) {
 		this.trains = trains.map((_, i, a) => a[a.length - i - 1]);
 		this.stationTrain = { state: 'none', lastTrainLeft: 0 };
@@ -33,15 +37,40 @@ export default class Track {
 		}
 
 		// Compute trains
-		const setup = trains.reduce((a, x) => {
-			// TODO
-			throw new Error('TODO');
-		}, {
+		const setup = trains.reduce((a, x) => ({
+			maxCars: Math.max(a.maxCars, x.cars),
+			maxDoors: Math.max(a.maxDoors, x.doors),
+			carLengths: a.carLengths.add(x.cars),
+			doorNums: a.doorNums.add(x.doors),
+			trainTypes: a.trainTypes.add(x.airport ? 'airport' : x.type),
+		}), {
 			maxCars: 0,
 			maxDoors: 0,
-			carLengths: [],
-			doorNums: [],
+			carLengths: new Set<number>(),
+			doorNums: new Set<number>(),
+			trainTypes: new Set<BoardingPosType>(),
 		});
+
+		// Hard coding in 5 doors for 3 + 4 for nicer symmetry
+		if (setup.maxDoors < 5 && setup.doorNums.has(3) && setup.doorNums.has(4)) {
+			setup.maxDoors = 5;
+		}
+
+		const carArr = Array(setup.maxCars).fill(undefined);
+		const doorArr = Array(setup.maxDoors).fill(undefined);
+
+		this.boardingPositions = carArr.map((_a, carIndex) => doorArr.map((_b, doorIndex) => {
+			const ps = [];
+
+			const doors: number[] = computeDoorsForPos(doorIndex, setup.doorNums, setup.maxDoors);
+			const cars: number[] = [];
+
+			if (setup.trainTypes.has('airport')) {
+				// TODO figure out doors
+				ps.push(new BoardingPos('airport', doors, cars, [4, 4], true));
+			}
+			return ps;
+		}));
 	}
 
 	step(newTime: number) {
@@ -107,4 +136,48 @@ export default class Track {
 			}
 		}
 	}
+}
+
+// Helper functions below exported only for testing
+
+export function computeDoorsForPos(doorIndex: number, doorNums: Set<number>, maxDoors: number) {
+	const doors: number[] = [];
+
+	doorNums.forEach((doorCandidate) => {
+		if (doorIndex === 0 || doorCandidate === maxDoors) {
+			doors.push(doorCandidate);
+			return;
+		}
+		if (doorCandidate <= 1) { return; }
+		if (maxDoors % 2 !== 0 && doorIndex * 2 + 1 === maxDoors) {
+			// Mid door on a train with odd doors
+			if (doorCandidate % 2 !== 0) {
+				doors.push(doorCandidate);
+			}
+			return;
+		}
+		const mid = Math.floor(maxDoors / 2) - 1;
+		if (maxDoors % 2 === 0 && doorCandidate % 2 !== 0 && doorIndex === mid) {
+			// Even car, odd center door
+			doors.push(doorCandidate);
+			return;
+		}
+		const equivalentDoor = doorIndex > mid ? (maxDoors - doorIndex - 1) : doorIndex;
+		if (equivalentDoor === 0) {
+			doors.push(doorCandidate);
+			return;
+		}
+		const numDoorsOpen = mid;
+		const numDoorsLeft = Math.floor(doorCandidate / 2) - 1;
+		if (numDoorsLeft <= 0) { return; }
+		const g = numDoorsOpen / numDoorsLeft;
+		for (let i = g; i <= mid; i += g) {
+			if (Math.ceil(i) === equivalentDoor) {
+				doors.push(doorCandidate);
+				return;
+			}
+		}
+	});
+
+	return doors;
 }
