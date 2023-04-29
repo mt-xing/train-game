@@ -167,11 +167,11 @@ export function computeDoorsForPos(doorIndex: number, doorNums: Set<number>, max
 			doors.push(doorCandidate);
 			return;
 		}
-		const numDoorsOpen = mid;
+		const numDoorsOpen = maxDoors % 2 === 0 && doorCandidate % 2 !== 0 ? mid - 1 : mid;
 		const numDoorsLeft = Math.floor(doorCandidate / 2) - 1;
 		if (numDoorsLeft <= 0) { return; }
 		const g = numDoorsOpen / numDoorsLeft;
-		for (let i = g; i <= mid; i += g) {
+		for (let i = g; i <= numDoorsOpen; i += g) {
 			if (Math.ceil(i) === equivalentDoor) {
 				doors.push(doorCandidate);
 				return;
