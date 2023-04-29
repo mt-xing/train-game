@@ -8,3 +8,23 @@ export type Level = {
 	health: number;
 	pax: [number, PaxConfig][] | (() => [number, PaxConfig][])
 }
+
+// Test consts
+
+const genericPaxA: PaxConfig = {
+	destination: 'a',
+	timing: [],
+	blue: false,
+	reservation: false,
+	women: false,
+	handicap: false,
+};
+const genericPaxB = { ...genericPaxA, destination: 'b' };
+
+export const testLevel: Level = {
+	trains: [[], []],
+	timeInitial: 10000,
+	timeGap: 30000,
+	health: 100,
+	pax: [[0, genericPaxA], [2000, genericPaxB], [4000, genericPaxA], [6000, genericPaxB]],
+};
