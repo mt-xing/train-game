@@ -1,4 +1,4 @@
-import { walkSpeed } from '../consts/balanceConsts';
+import { paxAnnoyTime, walkSpeed } from '../consts/balanceConsts';
 import { distance, Pos, step } from '../utils';
 
 export type PaxConfig = {
@@ -20,6 +20,8 @@ export default class Pax {
 
 	private upchargedLtdExp: boolean;
 
+	private timeSinceSpawn: number;
+
 	/** Visual position of this pax */
 	private pos: Pos | null;
 
@@ -35,6 +37,7 @@ export default class Pax {
 		this.upchargedLtdExp = false;
 		this.pos = null;
 		this.targets = [];
+		this.timeSinceSpawn = 0;
 	}
 
 	get config() { return this.settings; }
@@ -77,8 +80,20 @@ export default class Pax {
 		this.pos = loc;
 	}
 
+	get isAnnoyable() {
+		return this.timeSinceSpawn >= paxAnnoyTime;
+	}
+
+	get patienceLeft() {
+		if (this.isAnnoyable) { return 0; }
+		return (paxAnnoyTime - this.timeSinceSpawn) / paxAnnoyTime;
+	}
+
 	step(timeDelta: number) {
 		if (this.pos === null) { return; }
+
+		this.timeSinceSpawn += timeDelta;
+
 		if (this.targets.length === 0) { return; }
 		const nextTarget = this.targets[0];
 

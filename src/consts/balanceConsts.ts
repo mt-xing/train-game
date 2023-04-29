@@ -15,3 +15,6 @@ export const carGap = 30;
 
 /** Walking speed in asu/sec */
 export const walkSpeed = 40;
+
+/** How long before a pax deducts health if they miss their train */
+export const paxAnnoyTime = 10000;
