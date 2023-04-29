@@ -1,4 +1,7 @@
-import { trainAccelerateTime, trainStallTime } from '../consts/balanceConsts';
+import {
+	carGap, carLength, platformWidth, trainAccelerateTime, trainStallTime
+} from '../consts/balanceConsts';
+import { boardingPosWidth } from '../consts/visualConsts';
 import { assertUnreachable } from '../utils';
 import { BoardingPos, BoardingPosType } from './boardingPos';
 import Train, { TrainConfig } from './train';
@@ -26,12 +29,16 @@ export default class Track {
 	/** List of all boarding positions, first by car, then door, then the list of queues */
 	private boardingPositions: BoardingPos[][][];
 
-	constructor(initial: number, gap: number, trains: TrainConfig[]) {
+	/** True === -x train travel (low y end of platform) */
+	private dir: boolean;
+
+	constructor(initial: number, gap: number, trains: TrainConfig[], dir: boolean) {
 		this.trains = trains.map((_, i, a) => a[a.length - i - 1]);
 		this.stationTrain = { state: 'none', lastTrainLeft: 0 };
 		this.timeGap = gap;
 		this.timeInitial = initial;
 		this.time = 0;
+		this.dir = dir;
 		if (gap < trainStallTime + 2 * trainAccelerateTime) {
 			throw new Error('Train gap too small');
 		}
@@ -86,8 +93,17 @@ export default class Track {
 				}
 			});
 
-			typeArr.forEach((type) => {
-				ps.push(new BoardingPos(type, doors, cars, [4, 4], true));
+			typeArr.forEach((type, i) => {
+				const xOffsetFromTrainFront = (carGap / 2)
+					+ carIndex * (carLength + carGap)
+					+ doorIndex * Math.floor(carLength / setup.maxDoors)
+					+ (i + 1) * boardingPosWidth;
+				ps.push(new BoardingPos(type, doors, cars, [
+					dir
+						? xOffsetFromTrainFront
+						: (setup.maxCars * (carLength + carGap)) - xOffsetFromTrainFront,
+					dir ? 0 : platformWidth
+				], dir));
 			});
 			return ps;
 		}));
