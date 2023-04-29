@@ -6,6 +6,14 @@ import { assertUnreachable } from '../utils';
 import { BoardingPos, BoardingPosType } from './boardingPos';
 import Train, { TrainConfig } from './train';
 
+const boardingPosPriority: Record<BoardingPosType, number> = {
+	local: 0,
+	rapid: 1,
+	express: 2,
+	'ltd exp': 3,
+	airport: 4,
+};
+
 export default class Track {
 	/** Remaining trains in backwards order; next train is last item */
 	private trains: TrainConfig[];
@@ -65,19 +73,8 @@ export default class Track {
 
 		const carArr = Array(setup.maxCars).fill(undefined);
 		const doorArr = Array(setup.maxDoors).fill(undefined);
-		const typeArr = Array.from(setup.trainTypes).sort((a, b) => {
-			const mm = (x: BoardingPosType): number => {
-				switch (x) {
-				case 'local': return 0;
-				case 'rapid': return 1;
-				case 'express': return 2;
-				case 'ltd exp': return 3;
-				case 'airport': return 4;
-				default: assertUnreachable(x);
-				}
-			};
-			return mm(a) - mm(b);
-		});
+		const typeArr = Array.from(setup.trainTypes)
+			.sort((a, b) => boardingPosPriority[a] - boardingPosPriority[b]);
 
 		this.boardingPositions = carArr.map((_a, carIndex) => doorArr.map((_b, doorIndex) => {
 			const ps: BoardingPos[] = [];
