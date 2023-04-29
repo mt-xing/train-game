@@ -58,17 +58,37 @@ export default class Track {
 
 		const carArr = Array(setup.maxCars).fill(undefined);
 		const doorArr = Array(setup.maxDoors).fill(undefined);
+		const typeArr = Array.from(setup.trainTypes).sort((a, b) => {
+			const mm = (x: BoardingPosType): number => {
+				switch (x) {
+				case 'local': return 0;
+				case 'rapid': return 1;
+				case 'express': return 2;
+				case 'ltd exp': return 3;
+				case 'airport': return 4;
+				default: assertUnreachable(x);
+				}
+			};
+			return mm(a) - mm(b);
+		});
 
 		this.boardingPositions = carArr.map((_a, carIndex) => doorArr.map((_b, doorIndex) => {
-			const ps = [];
+			const ps: BoardingPos[] = [];
 
-			const doors: number[] = computeDoorsForPos(doorIndex, setup.doorNums, setup.maxDoors);
+			const doors = computeDoorsForPos(doorIndex, setup.doorNums, setup.maxDoors);
 			const cars: number[] = [];
 
-			if (setup.trainTypes.has('airport')) {
-				// TODO figure out doors
-				ps.push(new BoardingPos('airport', doors, cars, [4, 4], true));
-			}
+			setup.carLengths.forEach((carCandidate) => {
+				const startInc = firstCarStoppingPos(carCandidate, setup.maxCars);
+				const endExc = startInc + carCandidate;
+				if (carIndex >= startInc && carIndex < endExc) {
+					cars.push(carCandidate);
+				}
+			});
+
+			typeArr.forEach((type) => {
+				ps.push(new BoardingPos(type, doors, cars, [4, 4], true));
+			});
 			return ps;
 		}));
 	}
@@ -139,6 +159,12 @@ export default class Track {
 }
 
 // Helper functions below exported only for testing
+
+/** Returns ZERO-INDEXED stopping position of first car */
+export function firstCarStoppingPos(trainLength: number, trackLength: number) {
+	if (trainLength > trackLength) { throw new Error('Train does not fit'); }
+	return Math.floor((trackLength - trainLength) / 2);
+}
 
 export function computeDoorsForPos(doorIndex: number, doorNums: Set<number>, maxDoors: number) {
 	const doors: number[] = [];

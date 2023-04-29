@@ -1,4 +1,4 @@
-import { computeDoorsForPos } from './track';
+import { computeDoorsForPos, firstCarStoppingPos } from './track';
 
 function checkAllDoors(allDoors: number[], maxDoors: number, expected: number[][]) {
 	expected.forEach((e, i) => {
@@ -71,4 +71,19 @@ it('distributes seven door trains', () => {
 		[6, 7],
 		[2, 3, 4, 5, 6, 7],
 	]);
+});
+
+it('stops trains on correct spot', () => {
+	expect(firstCarStoppingPos(5, 5)).toBe(0);
+	expect(firstCarStoppingPos(4, 5)).toBe(0);
+	expect(firstCarStoppingPos(3, 5)).toBe(1);
+	expect(firstCarStoppingPos(2, 5)).toBe(1);
+	expect(firstCarStoppingPos(1, 5)).toBe(2);
+
+	expect(firstCarStoppingPos(6, 6)).toBe(0);
+	expect(firstCarStoppingPos(5, 6)).toBe(0);
+	expect(firstCarStoppingPos(4, 6)).toBe(1);
+	expect(firstCarStoppingPos(3, 6)).toBe(1);
+	expect(firstCarStoppingPos(2, 6)).toBe(2);
+	expect(firstCarStoppingPos(1, 6)).toBe(2);
 });
