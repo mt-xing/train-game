@@ -1,5 +1,5 @@
 import {
-	carGap, carLength, paxTotalDeboardTime,
+	carGap, carLength, paxBoardTime, paxTotalDeboardTime,
 	platformWidth, trainAccelerateTime, trainStallTime
 } from '../consts/balanceConsts';
 import { boardingPosWidth, paxDeboardTime } from '../consts/visualConsts';
@@ -154,41 +154,21 @@ export default class Track {
 					// Train is leaving
 					this.stationTrain.state = 'departing';
 					this.stationTrain.timeSinceStart = timeInState - trainStallTime;
-				} else if (timeInState <= paxTotalDeboardTime) {
-					// Pax are deboarding
-					const numPaxDeboarded = Math.ceil(this.stationTrain.timeSinceStart / paxDeboardTime);
-					const numPaxToDeboard = Math.ceil(timeInState / paxDeboardTime);
-					for (let i = numPaxDeboarded; i < numPaxToDeboard; i++) {
-						this.loopTrainBoardingPos((p) => {
-							this.spawnDeboardedPax(p.associatedDoorPos);
-						});
-					}
-					this.stationTrain.timeSinceStart += timeDelta;
 				} else {
-					// Pax are boarding
-					const numPaxBoarded = Math.ceil(this.stationTrain.timeSinceStart / paxDeboardTime);
-					const numPaxToBoard = Math.ceil(timeInState / paxDeboardTime);
 					const { train } = this.stationTrain;
-					for (let i = numPaxBoarded; i < numPaxToBoard; i++) {
-						this.loopTrainBoardingPos((pos) => {
-							const pax = pos.dequeuePax();
-							if (!pax) { return; }
-							this.paxBoardingTrain.add(pax);
-							const firstCar = firstCarStoppingPos(
-								train.config.cars, this.boardingPositions.length
-							);
-							pax.queueTarget(pos.associatedDoorPos, () => {
-								this.paxBoardingTrain.delete(pax);
-								const boardResult = canBoard(
-									pax, train.config, pos.trackCarIndex - firstCar, this.trains, null
-								);
-								if (boardResult !== true) {
-									this.failedBoard(pos.associatedDoorPos, boardResult);
-								}
-							});
-						});
-					}
-					this.stationTrain.timeSinceStart += timeDelta;
+					const isDeboard = timeInState <= paxTotalDeboardTime;
+
+					const timeGap = isDeboard ? paxDeboardTime : paxBoardTime;
+					const action = isDeboard ? this.loopTrainBoardingPos.bind(this, (p) => {
+						this.spawnDeboardedPax(p.associatedDoorPos);
+					}) : this.stepBoardOnePax.bind(this, train.config);
+
+					this.boardOrDeboard(
+						this.stationTrain.timeSinceStart,
+						timeInState,
+						timeGap,
+						action,
+					);
 				}
 				break;
 			case 'departing':
@@ -261,6 +241,37 @@ export default class Track {
 				};
 			}
 		}
+	}
+
+	private boardOrDeboard(
+		timeSinceStart: number, timeInState: number, stepTime: number,
+		action: () => void,
+	) {
+		const numPaxDone = Math.ceil(timeSinceStart / stepTime);
+		const numPaxTodo = Math.ceil(timeInState / stepTime);
+		for (let i = numPaxDone; i < numPaxTodo; i++) {
+			action();
+		}
+	}
+
+	private stepBoardOnePax(trainConfig: TrainConfig) {
+		this.loopTrainBoardingPos((pos) => {
+			const pax = pos.dequeuePax();
+			if (!pax) { return; }
+			this.paxBoardingTrain.add(pax);
+			const firstCar = firstCarStoppingPos(
+				trainConfig.cars, this.boardingPositions.length
+			);
+			pax.queueTarget(pos.associatedDoorPos, () => {
+				this.paxBoardingTrain.delete(pax);
+				const boardResult = canBoard(
+					pax, trainConfig, pos.trackCarIndex - firstCar, this.trains, null
+				);
+				if (boardResult !== true) {
+					this.failedBoard(pos.associatedDoorPos, boardResult);
+				}
+			});
+		});
 	}
 }
 
