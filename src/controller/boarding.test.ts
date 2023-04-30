@@ -1,4 +1,4 @@
-import Pax, { PaxConfig } from '../model/pax';
+import { Pax, PaxConfig } from '../model/pax';
 import { TrainConfig } from '../model/train';
 import { canBoard } from './boarding';
 

@@ -1,9 +1,12 @@
 import {
-	carGap, carLength, platformWidth, trainAccelerateTime, trainStallTime
+	carGap, carLength, paxTotalDeboardTime,
+	platformWidth, trainAccelerateTime, trainStallTime
 } from '../consts/balanceConsts';
-import { boardingPosWidth } from '../consts/visualConsts';
-import { assertUnreachable } from '../utils';
+import { boardingPosWidth, paxDeboardTime } from '../consts/visualConsts';
+import { BoardingResult, canBoard } from '../controller/boarding';
+import { Pos, assertUnreachable } from '../utils';
 import { BoardingPos, BoardingPosType } from './boardingPos';
+import { Pax } from './pax';
 import Train, { TrainConfig } from './train';
 
 const boardingPosPriority: Record<BoardingPosType, number> = {
@@ -40,13 +43,26 @@ export default class Track {
 	/** True === -x train travel (low y end of platform) */
 	private dir: boolean;
 
-	constructor(initial: number, gap: number, trains: TrainConfig[], dir: boolean) {
+	private paxBoardingTrain: Set<Pax>;
+
+	private spawnDeboardedPax: (pos: Pos) => void;
+
+	private failedBoard: (pos: Pos, type: BoardingResult) => void;
+
+	constructor(
+		initial: number, gap: number, trains: TrainConfig[], dir: boolean,
+		spawnDeboardedPax: ((pos: Pos) => void),
+		failedBoard: ((pos: Pos, type: BoardingResult) => void),
+	) {
 		this.trains = trains.map((_, i, a) => a[a.length - i - 1]);
 		this.stationTrain = { state: 'none', lastTrainLeft: 0 };
 		this.timeGap = gap;
 		this.timeInitial = initial;
 		this.time = 0;
 		this.dir = dir;
+		this.spawnDeboardedPax = spawnDeboardedPax;
+		this.failedBoard = failedBoard;
+		this.paxBoardingTrain = new Set();
 		if (gap < trainStallTime + 2 * trainAccelerateTime) {
 			throw new Error('Train gap too small');
 		}
@@ -91,16 +107,23 @@ export default class Track {
 			});
 
 			typeArr.forEach((type, i) => {
-				const xOffsetFromTrainFront = (carGap / 2)
+				const xOffsetFromTrainFrontDoor = (carGap / 2)
 					+ carIndex * (carLength + carGap)
-					+ doorIndex * Math.floor(carLength / setup.maxDoors)
+					+ doorIndex * Math.floor(carLength / setup.maxDoors);
+				const xOffsetFromTrainFrontPos = xOffsetFromTrainFrontDoor
 					+ (i + 1) * boardingPosWidth;
-				ps.push(new BoardingPos(type, doors, cars, [
+				const y = dir ? 0 : platformWidth;
+				ps.push(new BoardingPos(type, doors, cars, carIndex, [
 					dir
-						? xOffsetFromTrainFront
-						: (setup.maxCars * (carLength + carGap)) - xOffsetFromTrainFront,
-					dir ? 0 : platformWidth
-				], dir));
+						? xOffsetFromTrainFrontPos
+						: (setup.maxCars * (carLength + carGap)) - xOffsetFromTrainFrontPos,
+					y
+				], dir, [
+					dir
+						? xOffsetFromTrainFrontDoor
+						: (setup.maxCars * (carLength + carGap)) - xOffsetFromTrainFrontDoor,
+					y
+				]));
 			});
 			return ps;
 		}));
@@ -122,17 +145,57 @@ export default class Track {
 				if (timeInState >= trainAccelerateTime) {
 					this.stationTrain.state = 'idle';
 					this.stationTrain.timeSinceStart = timeInState - trainAccelerateTime;
+				} else {
+					this.stationTrain.timeSinceStart += timeDelta;
 				}
 				break;
 			case 'idle':
 				if (timeInState >= trainStallTime) {
+					// Train is leaving
 					this.stationTrain.state = 'departing';
 					this.stationTrain.timeSinceStart = timeInState - trainStallTime;
+				} else if (timeInState <= paxTotalDeboardTime) {
+					// Pax are deboarding
+					const numPaxDeboarded = Math.ceil(this.stationTrain.timeSinceStart / paxDeboardTime);
+					const numPaxToDeboard = Math.ceil(timeInState / paxDeboardTime);
+					for (let i = numPaxDeboarded; i < numPaxToDeboard; i++) {
+						this.loopTrainBoardingPos((p) => {
+							this.spawnDeboardedPax(p.associatedDoorPos);
+						});
+					}
+					this.stationTrain.timeSinceStart += timeDelta;
+				} else {
+					// Pax are boarding
+					const numPaxBoarded = Math.ceil(this.stationTrain.timeSinceStart / paxDeboardTime);
+					const numPaxToBoard = Math.ceil(timeInState / paxDeboardTime);
+					const { train } = this.stationTrain;
+					for (let i = numPaxBoarded; i < numPaxToBoard; i++) {
+						this.loopTrainBoardingPos((pos) => {
+							const pax = pos.dequeuePax();
+							if (!pax) { return; }
+							this.paxBoardingTrain.add(pax);
+							const firstCar = firstCarStoppingPos(
+								train.config.cars, this.boardingPositions.length
+							);
+							pax.queueTarget(pos.associatedDoorPos, () => {
+								this.paxBoardingTrain.delete(pax);
+								const boardResult = canBoard(
+									pax, train.config, pos.trackCarIndex - firstCar, this.trains, null
+								);
+								if (boardResult !== true) {
+									this.failedBoard(pos.associatedDoorPos, boardResult);
+								}
+							});
+						});
+					}
+					this.stationTrain.timeSinceStart += timeDelta;
 				}
 				break;
 			case 'departing':
 				if (timeInState >= trainStallTime) {
 					this.stationTrain = { state: 'none', lastTrainLeft: newTime - (timeInState - trainStallTime) };
+				} else {
+					this.stationTrain.timeSinceStart += timeDelta;
 				}
 				break;
 			default: assertUnreachable(this.stationTrain);
@@ -140,6 +203,30 @@ export default class Track {
 		}
 
 		this.time = newTime;
+	}
+
+	private loopTrainBoardingPos(fn: (x: BoardingPos, i?: number) => void) {
+		if (this.stationTrain.state !== 'idle') { throw new Error('Cannot loop over nonexistent train'); }
+		const { train } = this.stationTrain;
+		const startCarInc = firstCarStoppingPos(train.config.cars, this.boardingPositions.length);
+		const endCarExc = startCarInc + train.config.cars;
+		this.boardingPositions.forEach((a, carIndex) => {
+			if (carIndex < startCarInc || carIndex >= endCarExc) { return; }
+			a.forEach((b) => {
+				b.forEach((p) => {
+					if (
+						p.hasDoor(train.config.doors)
+						&& (p.type === train.config.type || (p.type === 'airport' && train.config.airport))
+					) {
+						fn(p);
+					}
+				});
+			});
+		});
+	}
+
+	private loopAllBoardingPos(fn: (x: BoardingPos) => void) {
+		this.boardingPositions.forEach((a) => a.forEach((b) => b.forEach(fn)));
 	}
 
 	private popNextTrain() {

@@ -1,7 +1,7 @@
 import { platformWidth } from '../consts/balanceConsts';
 import { defaultQueueGap, queueGap } from '../consts/visualConsts';
+import { Pax } from './pax';
 import { Pos } from '../utils';
-import Pax from './pax';
 import { TrainConfig } from './train';
 
 export type BoardingPosType = TrainConfig['type'] | 'airport';
@@ -15,22 +15,31 @@ export class BoardingPos {
 
 	private cars: Set<number>;
 
+	/** Zero-index of car on platform */
+	private carIndex: number;
+
 	private pax: Pax[];
 
 	private pos: Pos;
+
+	/** Position of the associated door */
+	private adp: Pos;
 
 	/** True = +y, False = -y */
 	private dir: boolean;
 
 	constructor(
-		type: BoardingPosType, doors: number[], cars: number[], pos: Pos, growsInPlusY: boolean
+		type: BoardingPosType, doors: number[], cars: number[], carIndex: number,
+		pos: Pos, growsInPlusY: boolean, associatedDoorPosition: Pos,
 	) {
 		this.t = type;
 		this.doors = new Set(doors);
 		this.cars = new Set(cars);
+		this.carIndex = carIndex;
 		this.pax = [];
 		this.pos = pos;
 		this.dir = growsInPlusY;
+		this.adp = associatedDoorPosition;
 	}
 
 	get type() { return this.t; }
@@ -38,6 +47,12 @@ export class BoardingPos {
 	get doorSet() { return this.doors.values(); }
 
 	get carSet() { return this.cars.values(); }
+
+	get position() { return this.pos; }
+
+	get associatedDoorPos() { return this.adp; }
+
+	get trackCarIndex() { return this.carIndex; }
 
 	hasDoor(doorNum: number) { return this.doors.has(doorNum); }
 
@@ -58,7 +73,9 @@ export class BoardingPos {
 
 	dequeuePax() {
 		const p = this.pax.shift();
-		this.readjustAllPax();
+		if (p) {
+			this.readjustAllPax();
+		}
 		return p;
 	}
 

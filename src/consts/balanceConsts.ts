@@ -23,4 +23,4 @@ export const paxAnnoyTime = 10000;
 export const paxBoardTime = 1000;
 
 /** How long to wait for pax deboarding each train */
-export const paxDeboardTime = 2000;
+export const paxTotalDeboardTime = 2000;

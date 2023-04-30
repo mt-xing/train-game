@@ -1,4 +1,4 @@
-import Pax from '../model/pax';
+import { Pax } from '../model/pax';
 import { TrainConfig } from '../model/train';
 import { assertUnreachable } from '../utils';
 

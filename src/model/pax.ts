@@ -11,7 +11,55 @@ export type PaxConfig = {
 	handicap: boolean;
 }
 
-export default class Pax {
+export class PaxBase {
+	/** Visual position of this pax */
+	protected pos: Pos | null;
+
+	/** List of visual positions to walk to plus callback */
+	private targets: [...Pos, undefined | (() => void)][];
+	// There's a built in assumption here that upcharge stations
+	// will not require stall time. Hopefully that holds.
+
+	constructor() {
+		this.pos = null;
+		this.targets = [];
+	}
+
+	queueTarget(dest: Pos, callback?: () => void) {
+		this.targets.push([dest[0], dest[1], callback]);
+	}
+
+	spawn(loc: Pos) {
+		if (this.pos !== null) {
+			throw new Error('Tried to spawn existing pax');
+		}
+		this.pos = loc;
+	}
+
+	step(timeDelta: number) {
+		if (this.pos === null) { return; }
+
+		if (this.targets.length === 0) { return; }
+		const nextTarget = this.targets[0];
+
+		const secFrac = timeDelta / 1000;
+		const stepSize = secFrac * walkSpeed;
+
+		if (distance(this.pos[0], this.pos[1], nextTarget[0], nextTarget[1]) < stepSize) {
+			[this.pos[0], this.pos[1]] = nextTarget;
+			this.targets.shift();
+			if (nextTarget[2]) {
+				nextTarget[2]();
+			}
+		} else {
+			[this.pos[0], this.pos[1]] = step(
+				this.pos[0], this.pos[1], nextTarget[0], nextTarget[1], stepSize
+			);
+		}
+	}
+}
+
+export class Pax extends PaxBase {
 	private settings: PaxConfig;
 
 	private upchargedReserved: number | null;
@@ -22,21 +70,12 @@ export default class Pax {
 
 	private timeSinceSpawn: number;
 
-	/** Visual position of this pax */
-	private pos: Pos | null;
-
-	/** List of visual positions to walk to plus callback */
-	private targets: [...Pos, undefined | (() => void)][];
-	// There's a built in assumption here that upcharge stations
-	// will not require stall time. Hopefully that holds.
-
 	constructor(config: PaxConfig) {
+		super();
 		this.settings = config;
 		this.upchargedReserved = null;
 		this.upchargedBlue = false;
 		this.upchargedLtdExp = false;
-		this.pos = null;
-		this.targets = [];
 		this.timeSinceSpawn = 0;
 	}
 
@@ -69,17 +108,6 @@ export default class Pax {
 		return true;
 	}
 
-	queueTarget(dest: Pos, callback?: () => void) {
-		this.targets.push([dest[0], dest[1], callback]);
-	}
-
-	spawn(loc: Pos) {
-		if (this.pos !== null) {
-			throw new Error('Tried to spawn existing pax');
-		}
-		this.pos = loc;
-	}
-
 	get isAnnoyable() {
 		return this.timeSinceSpawn >= paxAnnoyTime;
 	}
@@ -94,22 +122,6 @@ export default class Pax {
 
 		this.timeSinceSpawn += timeDelta;
 
-		if (this.targets.length === 0) { return; }
-		const nextTarget = this.targets[0];
-
-		const secFrac = timeDelta / 1000;
-		const stepSize = secFrac * walkSpeed;
-
-		if (distance(this.pos[0], this.pos[1], nextTarget[0], nextTarget[1]) < stepSize) {
-			[this.pos[0], this.pos[1]] = nextTarget;
-			this.targets.shift();
-			if (nextTarget[2]) {
-				nextTarget[2]();
-			}
-		} else {
-			[this.pos[0], this.pos[1]] = step(
-				this.pos[0], this.pos[1], nextTarget[0], nextTarget[1], stepSize
-			);
-		}
+		super.step(timeDelta);
 	}
 }
