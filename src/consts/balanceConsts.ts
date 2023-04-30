@@ -18,3 +18,9 @@ export const walkSpeed = 40;
 
 /** How long before a pax deducts health if they miss their train */
 export const paxAnnoyTime = 10000;
+
+/** How long for a pax to board the train */
+export const paxBoardTime = 1000;
+
+/** How long to wait for pax deboarding each train */
+export const paxDeboardTime = 2000;

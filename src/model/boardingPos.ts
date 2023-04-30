@@ -88,4 +88,8 @@ export class BoardingPos {
 			p.queueTarget([this.pos[0], this.pos[1] + newQueueGap * i]);
 		});
 	}
+
+	step(timeDelta: number) {
+		this.pax.forEach((p) => p.step(timeDelta));
+	}
 }

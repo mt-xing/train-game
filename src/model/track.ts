@@ -106,11 +106,17 @@ export default class Track {
 		}));
 	}
 
-	step(newTime: number) {
+	step(timeDelta: number) {
+		this.boardingPositions.forEach((a) => a.forEach(
+			(b) => b.forEach((c) => c.step(timeDelta))
+		));
+
+		const newTime = this.time + timeDelta;
+
 		if (this.stationTrain.state === 'none') {
 			this.checkTrainStartArriving(newTime);
 		} else {
-			const timeInState = this.stationTrain.timeSinceStart + (newTime - this.time);
+			const timeInState = this.stationTrain.timeSinceStart + timeDelta;
 			switch (this.stationTrain.state) {
 			case 'arriving':
 				if (timeInState >= trainAccelerateTime) {
