@@ -49,10 +49,13 @@ export default class Track {
 
 	private failedBoard: (pos: Pos, type: BoardingResult) => void;
 
+	private trainDepart: (train: TrainConfig, depBoard: TrainConfig[]) => void;
+
 	constructor(
 		initial: number, gap: number, trains: TrainConfig[], dir: boolean,
 		spawnDeboardedPax: ((pos: Pos) => void),
 		failedBoard: ((pos: Pos, type: BoardingResult) => void),
+		trainDepart: (train: TrainConfig, depBoard: TrainConfig[]) => void,
 	) {
 		this.trains = trains.map((_, i, a) => a[a.length - i - 1]);
 		this.stationTrain = { state: 'none', lastTrainLeft: 0 };
@@ -62,6 +65,7 @@ export default class Track {
 		this.dir = dir;
 		this.spawnDeboardedPax = spawnDeboardedPax;
 		this.failedBoard = failedBoard;
+		this.trainDepart = trainDepart;
 		this.paxBoardingTrain = new Set();
 		if (gap < trainStallTime + 2 * trainAccelerateTime) {
 			throw new Error('Train gap too small');
@@ -152,6 +156,7 @@ export default class Track {
 			case 'idle':
 				if (timeInState >= trainStallTime) {
 					// Train is leaving
+					this.trainDepart(this.stationTrain.train.config, this.trains.slice().reverse());
 					this.stationTrain.state = 'departing';
 					this.stationTrain.timeSinceStart = timeInState - trainStallTime;
 				} else {
@@ -205,7 +210,7 @@ export default class Track {
 		});
 	}
 
-	private loopAllBoardingPos(fn: (x: BoardingPos) => void) {
+	forEachBoardingPos(fn: (x: BoardingPos) => void) {
 		this.boardingPositions.forEach((a) => a.forEach((b) => b.forEach(fn)));
 	}
 

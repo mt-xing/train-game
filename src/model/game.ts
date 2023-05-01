@@ -1,9 +1,10 @@
-import { BoardingResult } from '../controller/boarding';
-import { resultToHealthDeduction } from '../controller/health';
+import { BoardingResult, canBoardFast } from '../controller/boarding';
+import { missedTrainDeduction, resultToHealthDeduction } from '../controller/health';
 import { Level } from '../levels';
 import { Pos } from '../utils';
 import { Pax, PaxBase, PaxConfig } from './pax';
 import Track from './track';
+import { TrainConfig } from './train';
 
 export default class TrainGame {
 	private time: number;
@@ -24,24 +25,15 @@ export default class TrainGame {
 	constructor(level: Level) {
 		this.time = 0;
 		this.healthLeft = level.health;
-		this.tracks = [
-			new Track(
-				level.timeInitial,
-				level.timeGap,
-				level.trains[0],
-				true,
-				this.spawnDeboardedPax.bind(this),
-				this.failedBoard.bind(this),
-			),
-			new Track(
-				level.timeInitial * 1.5,
-				level.timeGap,
-				level.trains[1],
-				false,
-				this.spawnDeboardedPax.bind(this),
-				this.failedBoard.bind(this),
-			),
-		];
+		this.tracks = [0, 1].map((id) => new Track(
+			level.timeInitial,
+			level.timeGap,
+			level.trains[id],
+			id === 0,
+			this.spawnDeboardedPax.bind(this),
+			this.failedBoard.bind(this),
+			this.trainDepart.bind(this),
+		)) as [Track, Track];
 		this.unspawnedPax = (Array.isArray(level.pax) ? level.pax : level.pax())
 			.sort((a, b) => b[0] - a[0]);
 		this.paxQueue = [];
@@ -78,5 +70,29 @@ export default class TrainGame {
 		this.healthLeft -= healthDeduct;
 		// eslint-disable-next-line no-console
 		console.log(`Boarding error at ${JSON.stringify(pos)} due to ${JSON.stringify(result)}`);
+	}
+
+	private trainDepart(train: TrainConfig, depBoard: TrainConfig[]) {
+		this.tracks.forEach((t) => {
+			t.forEachBoardingPos((pos) => {
+				pos.forEach((pax) => {
+					if (canBoardFast(pax, train, depBoard)) {
+						// Pax missed train
+						this.healthLeft -= missedTrainDeduction;
+					}
+				});
+			});
+		});
+
+		const process = (pax: Pax) => {
+			if (!pax.isAnnoyable) { return; }
+			if (canBoardFast(pax, train, depBoard)) {
+				// Pax missed train
+				this.healthLeft -= missedTrainDeduction;
+			}
+		};
+
+		this.platformPax.forEach(process);
+		this.paxQueue.forEach(process);
 	}
 }

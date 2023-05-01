@@ -84,6 +84,10 @@ export class BoardingPos {
 		this.readjustAllPax();
 	}
 
+	forEach(callback: (x: Pax) => void) {
+		this.pax.forEach(callback);
+	}
+
 	private readjustAllPax() {
 		if (this.pax.length * defaultQueueGap <= maxQueueLength) {
 			this.pax.forEach((p, i) => {
