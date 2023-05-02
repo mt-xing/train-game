@@ -65,9 +65,18 @@ export default class TrainGame {
 		p.queueTarget([0, 0], () => this.platformDeboardPax.delete(p));
 	}
 
+	private loseHealth(amount: number) {
+		if (amount >= this.healthLeft) {
+			// TODO lose game
+			this.healthLeft = 0;
+		} else {
+			this.healthLeft -= amount;
+		}
+	}
+
 	private failedBoard(pos: Pos, result: BoardingResult) {
 		const healthDeduct = resultToHealthDeduction(result);
-		this.healthLeft -= healthDeduct;
+		this.loseHealth(healthDeduct);
 		// eslint-disable-next-line no-console
 		console.log(`Boarding error at ${JSON.stringify(pos)} due to ${JSON.stringify(result)}`);
 	}
@@ -78,7 +87,7 @@ export default class TrainGame {
 				pos.forEach((pax) => {
 					if (canBoardFast(pax, train, depBoard)) {
 						// Pax missed train
-						this.healthLeft -= missedTrainDeduction;
+						this.loseHealth(missedTrainDeduction);
 					}
 				});
 			});
@@ -88,7 +97,7 @@ export default class TrainGame {
 			if (!pax.isAnnoyable) { return; }
 			if (canBoardFast(pax, train, depBoard)) {
 				// Pax missed train
-				this.healthLeft -= missedTrainDeduction;
+				this.loseHealth(missedTrainDeduction);
 			}
 		};
 
