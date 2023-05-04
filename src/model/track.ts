@@ -214,6 +214,8 @@ export default class Track {
 		this.boardingPositions.forEach((a) => a.forEach((b) => b.forEach(fn)));
 	}
 
+	get boardingPos() { return this.boardingPositions; }
+
 	private popNextTrain() {
 		const train = this.trains.pop();
 		if (train === undefined) {

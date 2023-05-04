@@ -108,6 +108,10 @@ export class Pax extends PaxBase {
 		return true;
 	}
 
+	get isSpawned() {
+		return this.pos !== null;
+	}
+
 	get isAnnoyable() {
 		return this.timeSinceSpawn >= paxAnnoyTime;
 	}

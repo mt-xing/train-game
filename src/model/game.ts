@@ -1,3 +1,4 @@
+import { carGap, carLength, platformWidth } from '../consts/balanceConsts';
 import { BoardingResult, canBoardFast } from '../controller/boarding';
 import { missedTrainDeduction, resultToHealthDeduction } from '../controller/health';
 import { Level } from '../levels';
@@ -10,6 +11,10 @@ export default class TrainGame {
 	private time: number;
 
 	private healthLeft: number;
+
+	private platformSize: Pos;
+
+	private spawnPos: Pos;
 
 	private tracks: [Track, Track];
 
@@ -39,6 +44,12 @@ export default class TrainGame {
 		this.paxQueue = [];
 		this.platformPax = new Set();
 		this.platformDeboardPax = new Set();
+
+		const maxTrainCars = this.tracks.reduce(
+			(a, x) => (a > x.boardingPos.length ? a : x.boardingPos.length), 0
+		);
+		this.platformSize = [maxTrainCars * (carLength + carGap), platformWidth];
+		this.spawnPos = this.platformSize.map((x) => x / 2) as Pos;
 	}
 
 	step(timeDelta: number) {
@@ -57,12 +68,19 @@ export default class TrainGame {
 		}
 	}
 
+	sendPaxToLoc(pax: Pax, loc: Pos, callback?: () => void) {
+		if (!pax.isSpawned) {
+			this.paxQueue = this.paxQueue.filter((x) => x !== pax);
+			pax.spawn(this.spawnPos);
+		}
+		pax.queueTarget(loc, callback);
+	}
+
 	private spawnDeboardedPax(pos: Pos): void {
 		const p = new PaxBase();
 		p.spawn(pos);
 		this.platformDeboardPax.add(p);
-		// TODO actual spawn and despawn point
-		p.queueTarget([0, 0], () => this.platformDeboardPax.delete(p));
+		p.queueTarget(this.spawnPos, () => this.platformDeboardPax.delete(p));
 	}
 
 	private loseHealth(amount: number) {
