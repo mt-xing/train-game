@@ -72,6 +72,7 @@ export default class TrainGame {
 		if (!pax.isSpawned) {
 			this.paxQueue = this.paxQueue.filter((x) => x !== pax);
 			pax.spawn(this.spawnPos);
+			this.platformPax.add(pax);
 		}
 		pax.queueTarget(loc, callback);
 	}
