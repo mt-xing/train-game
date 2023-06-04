@@ -6,7 +6,8 @@ export type Level = {
 	timeInitial: number;
 	timeGap: number;
 	health: number;
-	pax: [number, PaxConfig][] | (() => [number, PaxConfig][])
+	upchargeStations: ('blue' | 'reservation' | 'ltd exp')[];
+	pax: [number, PaxConfig][] | (() => [number, PaxConfig][]);
 }
 
 // Test consts
@@ -26,5 +27,6 @@ export const testLevel: Level = {
 	timeInitial: 10000,
 	timeGap: 30000,
 	health: 100,
+	upchargeStations: [],
 	pax: [[0, genericPaxA], [2000, genericPaxB], [4000, genericPaxA], [6000, genericPaxB]],
 };

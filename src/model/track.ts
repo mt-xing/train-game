@@ -7,6 +7,7 @@ import { BoardingResult, canBoard } from '../controller/boarding';
 import { Pos, assertUnreachable } from '../utils';
 import { BoardingPos, BoardingPosType } from './boardingPos';
 import { Pax } from './pax';
+import { TrackState } from './stateTypes';
 import Train, { TrainConfig } from './train';
 
 const boardingPosPriority: Record<BoardingPosType, number> = {
@@ -39,6 +40,8 @@ export default class Track {
 
 	/** List of all boarding positions, first by car, then door, then the list of queues */
 	private boardingPositions: BoardingPos[][][];
+
+	private boardingPosConfigCache: BoardingPosType[][][];
 
 	/** True === -x train travel (low y end of platform) */
 	private dir: boolean;
@@ -131,6 +134,10 @@ export default class Track {
 			});
 			return ps;
 		}));
+
+		this.boardingPosConfigCache =	this.boardingPos.map(
+			(car) => car.map((door) => door.map((x) => x.type))
+		);
 	}
 
 	step(timeDelta: number) {
@@ -190,6 +197,32 @@ export default class Track {
 		this.time = newTime;
 	}
 
+	get state(): TrackState {
+		if (this.stationTrain.state === 'none') {
+			if (this.trains.length === 0) {
+				return {
+					state: this.stationTrain.state,
+					trainCars: 0,
+					trainDoors: 0,
+					boardingPos: this.boardingPosConfigCache,
+				};
+			}
+			const nextTrain = this.trains[this.trains.length - 1];
+			return {
+				state: this.stationTrain.state,
+				trainCars: nextTrain.cars,
+				trainDoors: nextTrain.doors,
+				boardingPos: this.boardingPosConfigCache,
+			};
+		}
+		return {
+			state: this.stationTrain.state,
+			trainCars: this.stationTrain.train.config.cars,
+			trainDoors: this.stationTrain.train.config.doors,
+			boardingPos: this.boardingPosConfigCache,
+		};
+	}
+
 	private loopTrainBoardingPos(fn: (x: BoardingPos, i?: number) => void) {
 		if (this.stationTrain.state !== 'idle') { throw new Error('Cannot loop over nonexistent train'); }
 		const { train } = this.stationTrain;
@@ -212,6 +245,10 @@ export default class Track {
 
 	forEachBoardingPos(fn: (x: BoardingPos) => void) {
 		this.boardingPositions.forEach((a) => a.forEach((b) => b.forEach(fn)));
+	}
+
+	get allPaxPos() {
+		return this.boardingPositions.map((a) => a.map((b) => b.map((c) => c.position)));
 	}
 
 	get boardingPos() { return this.boardingPositions; }

@@ -4,6 +4,7 @@ import { missedTrainDeduction, resultToHealthDeduction } from '../controller/hea
 import { Level } from '../levels';
 import { Pos } from '../utils';
 import { Pax, PaxBase, PaxConfig } from './pax';
+import { GameState, TrackState } from './stateTypes';
 import Track from './track';
 import { TrainConfig } from './train';
 
@@ -66,6 +67,22 @@ export default class TrainGame {
 			if (!p) { throw new Error(); }
 			this.paxQueue.push(new Pax(p[1]));
 		}
+	}
+
+	get state(): GameState {
+		const platformPax = Array.from(this.platformPax).map((x) => x.position);
+		const platformDeboard = Array.from(this.platformDeboardPax).map((x) => x.position);
+		const trackPax = this.tracks.map((track) => track.allPaxPos).flat(3);
+
+		const allPax =	platformPax.concat(platformDeboard).concat(trackPax)
+			.filter((x): x is Pos => x !== null);
+		return {
+			tracks: this.tracks.map((x) => x.state) as [TrackState, TrackState],
+			platform: {
+				pax: allPax.map((p) => ({ x: p[0], y: p[1] })),
+				upchargeStations: [],
+			}
+		};
 	}
 
 	sendPaxToLoc(pax: Pax, loc: Pos, callback?: () => void) {

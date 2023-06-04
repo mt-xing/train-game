@@ -57,6 +57,8 @@ export class PaxBase {
 			);
 		}
 	}
+
+	get position() { return this.pos; }
 }
 
 export class Pax extends PaxBase {

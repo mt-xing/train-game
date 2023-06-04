@@ -26,7 +26,8 @@
 	  "plugin:@typescript-eslint/recommended",
 	  "plugin:@typescript-eslint/eslint-recommended",
 	  "plugin:@typescript-eslint/recommended-requiring-type-checking",
-	  "airbnb-base"
+	  "airbnb-base",
+		"plugin:react-hooks/recommended"
 	],
 	"parser": "@typescript-eslint/parser",
 	"plugins": [
