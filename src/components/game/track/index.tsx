@@ -11,13 +11,14 @@ type TrackProps = {
 	trainCars: number;
 	maxDoors: number;
 	maxCars: number;
+	startPx: number;
 };
 
 const doorWidth = 70;
 
 function Track(props: TrackProps) {
 	const {
-		flip, trainState, trainDoors, trainCars, maxDoors, maxCars,
+		flip, trainState, trainDoors, trainCars, maxDoors, maxCars, startPx,
 	} = props;
 
 	useEffect(() => {
@@ -73,7 +74,7 @@ function Track(props: TrackProps) {
 	);
 
 	return (
-		<section className={`track ${flip ? 'flip' : ''}`}>
+		<section className={`track ${flip ? 'flip' : ''}`} style={{ transform: `translateX(${-1 * startPx}px)` }} >
 			<div className={`train ${trainClass}`}>
 				{
 					allCarArr.map((_, i) => <div className="car" key={i} style={{

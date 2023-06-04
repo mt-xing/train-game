@@ -20,10 +20,15 @@ export class PaxBase {
 	// There's a built in assumption here that upcharge stations
 	// will not require stall time. Hopefully that holds.
 
+	private iid: string;
+
 	constructor() {
 		this.pos = null;
 		this.targets = [];
+		this.iid = `${Math.random()}`.substring(2);
 	}
+
+	get userControllable() { return false; }
 
 	queueTarget(dest: Pos, callback?: () => void) {
 		this.targets.push([dest[0], dest[1], callback]);
@@ -59,6 +64,8 @@ export class PaxBase {
 	}
 
 	get position() { return this.pos; }
+
+	get id() { return this.iid; }
 }
 
 export class Pax extends PaxBase {
@@ -80,6 +87,8 @@ export class Pax extends PaxBase {
 		this.upchargedLtdExp = false;
 		this.timeSinceSpawn = 0;
 	}
+
+	get userControllable() { return true; }
 
 	get config() { return this.settings; }
 
