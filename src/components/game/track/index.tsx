@@ -40,16 +40,17 @@ function Track(props: TrackProps) {
 	}, [trainState]);
 
 	const trainDoorOffsets = useMemo(() => {
-		const o = ['0'];
+		const o = [];
 
-		for (let i = 1; i < maxDoors; i++) {
+		for (let ii = 0; ii < maxDoors; ii++) {
+			const i = flip ? ii : (maxDoors - 1 - ii);
 			const percentagePos = i * (100 / (maxDoors - 1));
 			const offsetPx = doorWidth * (percentagePos / 100);
 			o.push(`calc(${percentagePos}% - ${offsetPx}px)`);
 		}
 
 		return o;
-	}, [maxDoors]);
+	}, [maxDoors, flip]);
 
 	const computedDoorOffsets = useMemo(() => Array.from(Array(maxDoors)).map((_, i) => {
 		const doorsAtI = computeDoorsForPos(i, new Set([maxDoors, trainDoors]), maxDoors);
