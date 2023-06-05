@@ -4,7 +4,9 @@ import { missedTrainDeduction, resultToHealthDeduction } from '../controller/hea
 import { Level } from '../levels';
 import { Pos } from '../utils';
 import { BoardingPos } from './boardingPos';
-import { Pax, PaxBase, PaxConfig } from './pax';
+import {
+	Pax, PaxBase, PaxConfig, PaxSet
+} from './pax';
 import { GameState, TrackState } from './stateTypes';
 import Track from './track';
 import { TrainConfig } from './train';
@@ -25,9 +27,9 @@ export default class TrainGame {
 
 	private paxQueue: Pax[];
 
-	private platformPax: Set<Pax>;
+	private platformPax: PaxSet<Pax>;
 
-	private platformDeboardPax: Set<PaxBase>;
+	private platformDeboardPax: PaxSet<PaxBase>;
 
 	constructor(level: Level) {
 		this.time = performance.now();
@@ -44,8 +46,8 @@ export default class TrainGame {
 		this.unspawnedPax = (Array.isArray(level.pax) ? level.pax : level.pax())
 			.sort((a, b) => b[0] - a[0]);
 		this.paxQueue = [];
-		this.platformPax = new Set();
-		this.platformDeboardPax = new Set();
+		this.platformPax = new PaxSet();
+		this.platformDeboardPax = new PaxSet();
 
 		const maxTrainCars = this.tracks.reduce(
 			(a, x) => (a > x.boardingPos.length ? a : x.boardingPos.length), 0

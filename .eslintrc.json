@@ -56,6 +56,7 @@
 	  "no-useless-return": "off",
 	  "no-await-in-loop": "off",
 	  "consistent-return": "off",
+		"no-param-reassign": "off",
 	  "import/extensions": [
 			"error",
 			{

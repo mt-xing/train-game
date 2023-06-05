@@ -1,6 +1,6 @@
 import { platformWidth } from '../consts/balanceConsts';
 import { defaultQueueGap, queueGap } from '../consts/visualConsts';
-import { Pax } from './pax';
+import { Pax, PaxBase, PaxHolder } from './pax';
 import { Pos } from '../utils';
 import { TrainConfig } from './train';
 
@@ -8,7 +8,7 @@ export type BoardingPosType = TrainConfig['type'] | 'airport';
 
 const maxQueueLength = (platformWidth - queueGap) / 2;
 
-export class BoardingPos {
+export class BoardingPos implements PaxHolder {
 	private t: BoardingPosType;
 
 	private doors: Set<number>;
@@ -62,6 +62,7 @@ export class BoardingPos {
 
 	enqueuePax(pax: Pax) {
 		this.pax.push(pax);
+		pax.setPaxHolder(this);
 		if (this.pax.length === 1) {
 			pax.queueTarget(this.pos);
 		} else if (this.pax.length * defaultQueueGap <= maxQueueLength) {
@@ -81,7 +82,7 @@ export class BoardingPos {
 		return p;
 	}
 
-	removePax(pax: Pax) {
+	removePax(pax: PaxBase) {
 		this.pax = this.pax.filter((x) => x !== pax);
 		this.readjustAllPax();
 	}

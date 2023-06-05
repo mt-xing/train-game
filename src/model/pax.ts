@@ -11,9 +11,32 @@ export type PaxConfig = {
 	handicap: boolean;
 }
 
+export interface PaxHolder {
+	removePax(p: PaxBase): void;
+}
+
+/**
+ * A JavaScript Set, except it also implements PaxHolder and will set
+ * the pax's owner when adding it to this set.
+ */
+export class PaxSet<T extends PaxBase> extends Set<T> implements PaxHolder {
+	removePax(p: PaxBase) {
+		super.delete(p as T);
+	}
+
+	add(pax: T) {
+		pax.setPaxHolder(this);
+		super.add(pax);
+		return this;
+	}
+}
+
 export class PaxBase {
 	/** Visual position of this pax */
 	protected pos: Pos | null;
+
+	/** Reference to object that currently owns this pax. Null iff pos is null. */
+	private paxHolder: PaxHolder | null;
 
 	/** List of visual positions to walk to plus callback */
 	private targets: [...Pos, undefined | (() => void)][];
@@ -24,11 +47,19 @@ export class PaxBase {
 
 	constructor() {
 		this.pos = null;
+		this.paxHolder = null;
 		this.targets = [];
 		this.iid = `${Math.random()}`.substring(2);
 	}
 
 	get userControllable() { return false; }
+
+	setPaxHolder(h: PaxHolder) {
+		if (this.paxHolder !== null) {
+			this.paxHolder.removePax(this);
+		}
+		this.paxHolder = h;
+	}
 
 	queueTarget(dest: Pos, callback?: () => void) {
 		this.targets.push([dest[0], dest[1], callback]);
