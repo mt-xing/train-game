@@ -64,7 +64,7 @@ export default class Track {
 		this.stationTrain = { state: 'none', lastTrainLeft: 0 };
 		this.timeGap = gap;
 		this.timeInitial = initial;
-		this.time = 0;
+		this.time = performance.now();
 		this.dir = dir;
 		this.spawnDeboardedPax = spawnDeboardedPax;
 		this.failedBoard = failedBoard;
@@ -181,6 +181,8 @@ export default class Track {
 						timeGap,
 						action,
 					);
+
+					this.stationTrain.timeSinceStart += timeDelta;
 				}
 				break;
 			case 'departing':
@@ -263,6 +265,9 @@ export default class Track {
 
 	private checkTrainStartArriving(newTime: number) {
 		if (this.stationTrain.state !== 'none') { throw new Error('Invalid train arrive'); }
+
+		// TODO end level
+		if (this.trains.length === 0) { return; }
 
 		if (this.time < this.timeInitial) {
 			// First train hasn't come in yet

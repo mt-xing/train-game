@@ -30,7 +30,7 @@ export default class TrainGame {
 	private platformDeboardPax: Set<PaxBase>;
 
 	constructor(level: Level) {
-		this.time = 0;
+		this.time = performance.now();
 		this.healthLeft = level.health;
 		this.tracks = [0, 1].map((id) => new Track(
 			level.timeInitial,

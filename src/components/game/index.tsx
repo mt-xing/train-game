@@ -16,13 +16,16 @@ p.spawn([500, 50]);
 const platformSize = [6 * (carLength + carGap), 100] as Pos;
 
 const game = new TrainGame(testLevel);
-game.step(20000);
 
 function Game() {
 	const [scroll, setScroll] = useState(0);
 	const [windowWidth, setWindowWidth] = useState(window.innerWidth);
 	const [windowHeight, setWindowHeight] = useState(window.innerHeight);
+	const [_iteration, setIteration] = useState(0);
+
 	useEffect(() => {
+		let going = true;
+
 		const ev1 = () => setScroll(getScrollFrac());
 		window.addEventListener('scroll', ev1);
 		const ev2 = () => {
@@ -31,9 +34,22 @@ function Game() {
 			ev1();
 		};
 		window.addEventListener('resize', ev2);
+
+		let time = performance.now();
+		const gameLoop = (t: number) => {
+			game.step(t - time);
+			time = t;
+			setIteration((i) => i + 1);
+			if (going) {
+				window.requestAnimationFrame(gameLoop);
+			}
+		};
+		gameLoop(performance.now());
+
 		return () => {
 			window.removeEventListener('scroll', ev1);
 			window.removeEventListener('resize', ev2);
+			going = false;
 		};
 	}, []);
 
