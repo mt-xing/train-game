@@ -32,7 +32,7 @@
 	background: white;
 }
 
-.train.arriving {
+.train.pre {
 	transform: translateX(-100%);
 	transition: none;
 }
@@ -42,7 +42,7 @@
 	transition: transform 10s ease-in;
 }
 
-.track.flip .train.arriving {
+.track.flip .train.pre {
 	transform: translateX(100%);
 }
 

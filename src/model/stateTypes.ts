@@ -7,7 +7,7 @@ export type PaxState = {
 };
 
 export type TrackState = {
-	state: 'none' | 'arriving' | 'idle' | 'departing',
+	trainState: 'none' | 'arriving' | 'idle' | 'departing',
 	trainCars: number,
 	trainDoors: number,
 	boardingPos: BoardingPosType[][][],

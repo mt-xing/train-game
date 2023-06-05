@@ -3,6 +3,7 @@ import { BoardingResult, canBoardFast } from '../controller/boarding';
 import { missedTrainDeduction, resultToHealthDeduction } from '../controller/health';
 import { Level } from '../levels';
 import { Pos } from '../utils';
+import { BoardingPos } from './boardingPos';
 import { Pax, PaxBase, PaxConfig } from './pax';
 import { GameState, TrackState } from './stateTypes';
 import Track from './track';
@@ -83,6 +84,10 @@ export default class TrainGame {
 				upchargeStations: [],
 			}
 		};
+	}
+
+	get boardingPos(): [BoardingPos[], BoardingPos[]] {
+		return this.tracks.map((x) => x.boardingPos.flat(3)) as [BoardingPos[], BoardingPos[]];
 	}
 
 	sendPaxToLoc(pax: Pax, loc: Pos, callback?: () => void) {

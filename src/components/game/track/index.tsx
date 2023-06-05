@@ -2,15 +2,12 @@ import React, { useEffect, useMemo } from 'react';
 import { assertUnreachable } from '../../../utils';
 import './index.css';
 import { computeDoorsForPos, firstCarStoppingPos } from '../../../model/track';
+import { TrackState } from '../../../model/stateTypes';
 
 type TrackProps = {
 	/** Flipped = left or up */
 	flip: boolean;
-	trainState: 'arriving' | 'idle' | 'departing' | 'none';
-	trainDoors: number;
-	trainCars: number;
-	maxDoors: number;
-	maxCars: number;
+	trackState: TrackState;
 	startPx: number;
 };
 
@@ -18,8 +15,14 @@ const doorWidth = 70;
 
 function Track(props: TrackProps) {
 	const {
-		flip, trainState, trainDoors, trainCars, maxDoors, maxCars, startPx,
+		flip, trackState, startPx,
 	} = props;
+	const {
+		trainState, trainDoors, trainCars, boardingPos,
+	} = trackState;
+
+	const maxCars = boardingPos.length;
+	const maxDoors = boardingPos[0].length;
 
 	useEffect(() => {
 		if (trainDoors > maxDoors || trainCars > maxCars) {
@@ -29,9 +32,9 @@ function Track(props: TrackProps) {
 
 	const trainClass = useMemo(() => {
 		switch (trainState) {
-		case 'arriving':
 		case 'none':
-			return 'arriving';
+			return 'pre';
+		case 'arriving':
 		case 'idle':
 			return '';
 		case 'departing':

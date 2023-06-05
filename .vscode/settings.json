@@ -2,9 +2,9 @@
 	"editor.codeActionsOnSave": {
 		"source.fixAll.eslint": true
 	},
-	"eslint.validate": ["javascript"],
 	"files.eol": "\n",
 	"editor.tabSize": 2,
 	"editor.detectIndentation": false,
-	"editor.insertSpaces": false
+	"editor.insertSpaces": false,
+	"typescript.tsdk": "node_modules/typescript/lib"
 }

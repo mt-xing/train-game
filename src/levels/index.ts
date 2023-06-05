@@ -23,7 +23,37 @@ const genericPaxA: PaxConfig = {
 const genericPaxB = { ...genericPaxA, destination: 'b' };
 
 export const testLevel: Level = {
-	trains: [[], []],
+	trains: [[{
+		destination: 'a',
+		uiTime: 0,
+		type: 'local',
+		airport: false,
+		cars: 6,
+		doors: 4,
+		women: null,
+		blue: null,
+		reserved: false,
+	}], [{
+		destination: 'b',
+		uiTime: 3,
+		type: 'local',
+		airport: false,
+		cars: 4,
+		doors: 5,
+		women: null,
+		blue: null,
+		reserved: false,
+	}, {
+		destination: 'b',
+		uiTime: 8,
+		type: 'rapid',
+		airport: false,
+		cars: 6,
+		doors: 5,
+		women: null,
+		blue: null,
+		reserved: false,
+	}]],
 	timeInitial: 10000,
 	timeGap: 30000,
 	health: 100,

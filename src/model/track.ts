@@ -201,7 +201,7 @@ export default class Track {
 		if (this.stationTrain.state === 'none') {
 			if (this.trains.length === 0) {
 				return {
-					state: this.stationTrain.state,
+					trainState: this.stationTrain.state,
 					trainCars: 0,
 					trainDoors: 0,
 					boardingPos: this.boardingPosConfigCache,
@@ -209,14 +209,14 @@ export default class Track {
 			}
 			const nextTrain = this.trains[this.trains.length - 1];
 			return {
-				state: this.stationTrain.state,
+				trainState: this.stationTrain.state,
 				trainCars: nextTrain.cars,
 				trainDoors: nextTrain.doors,
 				boardingPos: this.boardingPosConfigCache,
 			};
 		}
 		return {
-			state: this.stationTrain.state,
+			trainState: this.stationTrain.state,
 			trainCars: this.stationTrain.train.config.cars,
 			trainDoors: this.stationTrain.train.config.doors,
 			boardingPos: this.boardingPosConfigCache,
