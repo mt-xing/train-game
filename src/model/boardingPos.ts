@@ -54,6 +54,8 @@ export class BoardingPos {
 
 	get trackCarIndex() { return this.carIndex; }
 
+	get allPax() { return this.pax; }
+
 	hasDoor(doorNum: number) { return this.doors.has(doorNum); }
 
 	hasCar(carNum: number) { return this.cars.has(carNum); }

@@ -1,10 +1,6 @@
 import { Pos } from '../utils';
 import { BoardingPosType } from './boardingPos';
-
-export type PaxState = {
-	x: number,
-	y: number,
-};
+import { PaxBase } from './pax';
 
 export type TrackState = {
 	trainState: 'none' | 'arriving' | 'idle' | 'departing',
@@ -14,7 +10,7 @@ export type TrackState = {
 }
 
 export type PlatformState = {
-	pax: PaxState[],
+	pax: PaxBase[],
 	upchargeStations: {type: 'blue' | 'reservation' | 'ltd exp', pos: Pos}[]
 }
 

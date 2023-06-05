@@ -2,20 +2,15 @@ import React, { useEffect, useState } from 'react';
 import Track from './track';
 import Platform from './platform';
 import './index.css';
-import { Pax } from '../../model/pax';
 import { carGap, carLength, platformWidth as pWidthAsu } from '../../consts/balanceConsts';
 import { Pos, getScrollFrac } from '../../utils';
 import TrainGame from '../../model/game';
 import { testLevel } from '../../levels';
 
-const p = new Pax({
-	destination: 'a', timing: [], blue: false, reservation: false, women: false, handicap: false
-});
-p.spawn([500, 50]);
-
 const platformSize = [6 * (carLength + carGap), 100] as Pos;
 
 const game = new TrainGame(testLevel);
+window.setTimeout(() => game.testSpawnFirstPax(), 1000);
 
 function Game() {
 	const [scroll, setScroll] = useState(0);
@@ -80,7 +75,12 @@ function Game() {
 				trackState={game.state.tracks[0]}
 				startPx={startPx}
 			/>
-			<Platform pax={[p]} startPx={startPx} pxPerAsu={pxPerAsu} boardingPos={game.boardingPos} />
+			<Platform
+				pax={game.state.platform.pax}
+				startPx={startPx}
+				pxPerAsu={pxPerAsu}
+				boardingPos={game.boardingPos}
+			/>
 			<Track
 				flip={false}
 				trackState={game.state.tracks[1]}

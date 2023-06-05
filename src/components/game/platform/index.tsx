@@ -42,7 +42,7 @@ function Platform(props: PlatformProps) {
 				boardingPos[1].map((bp, i) => <div className="bp" key={i} style={{
 					top: `${bp.position[1] * pxPerAsu - 20}px`,
 					left: `${bp.position[0] * pxPerAsu - startPx}px`,
-				}} />)
+				}} onClick={() => queuePos(bp)} />)
 			}
 		</section>
 	);

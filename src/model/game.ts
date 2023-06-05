@@ -71,16 +71,16 @@ export default class TrainGame {
 	}
 
 	get state(): GameState {
-		const platformPax = Array.from(this.platformPax).map((x) => x.position);
-		const platformDeboard = Array.from(this.platformDeboardPax).map((x) => x.position);
-		const trackPax = this.tracks.map((track) => track.allPaxPos).flat(3);
+		const platformPax: PaxBase[] = Array.from(this.platformPax);
+		const platformDeboard = Array.from(this.platformDeboardPax);
+		const trackPax = this.tracks.map((track) => track.allPax).flat(4);
 
 		const allPax =	platformPax.concat(platformDeboard).concat(trackPax)
-			.filter((x): x is Pos => x !== null);
+			.filter((x): x is PaxBase => x !== null);
 		return {
 			tracks: this.tracks.map((x) => x.state) as [TrackState, TrackState],
 			platform: {
-				pax: allPax.map((p) => ({ x: p[0], y: p[1] })),
+				pax: allPax,
 				upchargeStations: [],
 			}
 		};
@@ -97,6 +97,10 @@ export default class TrainGame {
 			this.platformPax.add(pax);
 		}
 		pax.queueTarget(loc, callback);
+	}
+
+	testSpawnFirstPax() {
+		this.sendPaxToLoc(this.paxQueue[0], this.spawnPos);
 	}
 
 	private spawnDeboardedPax(pos: Pos): void {

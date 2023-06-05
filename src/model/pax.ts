@@ -38,7 +38,7 @@ export class PaxBase {
 		if (this.pos !== null) {
 			throw new Error('Tried to spawn existing pax');
 		}
-		this.pos = loc;
+		this.pos = loc.slice() as Pos;
 	}
 
 	step(timeDelta: number) {

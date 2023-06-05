@@ -249,8 +249,8 @@ export default class Track {
 		this.boardingPositions.forEach((a) => a.forEach((b) => b.forEach(fn)));
 	}
 
-	get allPaxPos() {
-		return this.boardingPositions.map((a) => a.map((b) => b.map((c) => c.position)));
+	get allPax() {
+		return this.boardingPositions.map((a) => a.map((b) => b.map((c) => c.allPax)));
 	}
 
 	get boardingPos() { return this.boardingPositions; }
