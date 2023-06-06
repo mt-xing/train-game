@@ -116,7 +116,7 @@ export default class Track {
 			typeArr.forEach((type, i) => {
 				const xOffsetFromTrainFrontDoor = (carGap / 2)
 					+ carIndex * (carLength + carGap)
-					+ doorIndex * Math.floor(carLength / setup.maxDoors);
+					+ doorIndex * Math.floor(carLength / (setup.maxDoors - 1));
 				const xOffsetFromTrainFrontPos = xOffsetFromTrainFrontDoor
 					+ (i + 1) * boardingPosWidth;
 				const y = dir ? 0 : platformWidth;
