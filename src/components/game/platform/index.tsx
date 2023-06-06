@@ -34,8 +34,8 @@ function Platform(props: PlatformProps) {
 				}} onClick={() => queuePos(bp)} />)
 			}
 			{pax.map((p) => (p.position ? <div className='player' key={p.id} style={{
-				top: `${p.position[1] * pxPerAsu}px`,
-				left: `${p.position[0] * pxPerAsu - startPx}px`,
+				top: `${p.position[1] * pxPerAsu - 10}px`,
+				left: `${p.position[0] * pxPerAsu - startPx - 10}px`,
 				background: p === selectedPlayer ? 'red' : undefined,
 			}} onClick={() => (p.userControllable ? setSelectedPlayer(p) : undefined)} /> : null))}
 			{
