@@ -48,7 +48,7 @@ export default class Track {
 
 	private paxBoardingTrain: Set<Pax>;
 
-	private spawnDeboardedPax: (pos: Pos) => void;
+	private spawnDeboardedPax: (pos: Pos, flip: boolean) => void;
 
 	private failedBoard: (pos: Pos, type: BoardingResult) => void;
 
@@ -56,7 +56,7 @@ export default class Track {
 
 	constructor(
 		initial: number, gap: number, trains: TrainConfig[], dir: boolean,
-		spawnDeboardedPax: ((pos: Pos) => void),
+		spawnDeboardedPax: ((pos: Pos, flip: boolean) => void),
 		failedBoard: ((pos: Pos, type: BoardingResult) => void),
 		trainDepart: (train: TrainConfig, depBoard: TrainConfig[]) => void,
 	) {
@@ -172,7 +172,7 @@ export default class Track {
 
 					const timeGap = isDeboard ? paxDeboardTime : paxBoardTime;
 					const action = isDeboard ? this.loopTrainBoardingPos.bind(this, (p) => {
-						this.spawnDeboardedPax(p.associatedDoorPos);
+						this.spawnDeboardedPax(p.associatedDoorPos, this.dir);
 					}) : this.stepBoardOnePax.bind(this, train.config);
 
 					this.boardOrDeboard(

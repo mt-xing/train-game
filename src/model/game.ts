@@ -105,10 +105,11 @@ export default class TrainGame {
 		this.sendPaxToLoc(this.paxQueue[0], this.spawnPos);
 	}
 
-	private spawnDeboardedPax(pos: Pos): void {
+	private spawnDeboardedPax(pos: Pos, flip: boolean): void {
 		const p = new PaxBase();
 		p.spawn(pos);
 		this.platformDeboardPax.add(p);
+		p.queueTarget([pos[0], pos[1] + 5 * (flip ? 1 : -1)]);
 		p.queueTarget(this.spawnPos, () => this.platformDeboardPax.delete(p));
 	}
 
