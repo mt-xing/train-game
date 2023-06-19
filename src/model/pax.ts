@@ -52,7 +52,7 @@ export class PaxBase {
 		this.iid = `${Math.random()}`.substring(2);
 	}
 
-	get userControllable() { return false; }
+	isUserControllable(): this is Pax { return false; }
 
 	setPaxHolder(h: PaxHolder) {
 		if (this.paxHolder !== null) {
@@ -119,7 +119,7 @@ export class Pax extends PaxBase {
 		this.timeSinceSpawn = 0;
 	}
 
-	get userControllable() { return true; }
+	isUserControllable() { return true; }
 
 	get config() { return this.settings; }
 

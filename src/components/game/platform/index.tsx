@@ -1,29 +1,37 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback } from 'react';
 import './index.css';
 import { Pax, PaxBase } from '../../../model/pax';
 import { BoardingPos } from '../../../model/boardingPos';
+import { Pos } from '../../../utils';
 
 type PlatformProps = {
 	startPx: number;
 	pax: PaxBase[];
 	pxPerAsu: number;
 	boardingPos: [BoardingPos[], BoardingPos[]];
+	setSelected: (p: Pax | null) => void;
+	selectedPax: Pax | null;
+	spawnPax: (p: Pax, pos: Pos) => void;
 };
 
 function Platform(props: PlatformProps) {
 	const {
-		pax, startPx, boardingPos, pxPerAsu
+		pax, startPx, boardingPos, pxPerAsu, setSelected, selectedPax, spawnPax
 	} = props;
 
-	const [selectedPlayer, setSelectedPlayer] = useState<null | PaxBase>(null);
 	const queuePos = useCallback((dest: BoardingPos) => {
-		if (selectedPlayer === null) { return; }
-		const sp = selectedPlayer;
-		sp.queueTarget(dest.position, () => {
-			dest.enqueuePax(sp as Pax);
-		});
-		setSelectedPlayer(null);
-	}, [selectedPlayer]);
+		if (selectedPax === null) { return; }
+		const sp = selectedPax;
+		if (!sp.isSpawned) {
+			spawnPax(sp, dest.position);
+		} else {
+			sp.queueTarget(dest.position, () => {
+				dest.enqueuePax(sp);
+			});
+		}
+
+		setSelected(null);
+	}, [selectedPax, setSelected, spawnPax]);
 
 	return (
 		<section className='platform'>
@@ -36,8 +44,8 @@ function Platform(props: PlatformProps) {
 			{pax.map((p) => (p.position ? <div className='player' key={p.id} style={{
 				top: `${p.position[1] * pxPerAsu - 10}px`,
 				left: `${p.position[0] * pxPerAsu - startPx - 10}px`,
-				background: p === selectedPlayer ? 'red' : undefined,
-			}} onClick={() => (p.userControllable ? setSelectedPlayer(p) : undefined)} /> : null))}
+				background: p === selectedPax ? 'red' : undefined,
+			}} onClick={() => (p.isUserControllable() ? setSelected(p) : undefined)} /> : null))}
 			{
 				boardingPos[1].map((bp, i) => <div className="bp" key={i} style={{
 					top: `${bp.position[1] * pxPerAsu - 20}px`,

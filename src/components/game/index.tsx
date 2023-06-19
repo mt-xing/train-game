@@ -6,11 +6,12 @@ import { carGap, carLength, platformWidth as pWidthAsu } from '../../consts/bala
 import { Pos, getScrollFrac } from '../../utils';
 import TrainGame from '../../model/game';
 import { testLevel } from '../../levels';
+import Queue from './queue';
+import { Pax } from '../../model/pax';
 
 const platformSize = [6 * (carLength + carGap), 100] as Pos;
 
 const game = new TrainGame(testLevel);
-window.setTimeout(() => game.testSpawnFirstPax(), 1000);
 
 function Game() {
 	const [scroll, setScroll] = useState(0);
@@ -68,24 +69,31 @@ function Game() {
 		return () => { body.style.height = ''; };
 	}, [scrollNeeded]);
 
+	const { state } = game;
+	const [selectedPax, setSelectedPax] = useState<null | Pax>(null);
+
 	return (
 		<main className="game">
 			<Track
 				flip={true}
-				trackState={game.state.tracks[0]}
+				trackState={state.tracks[0]}
 				startPx={startPx}
 			/>
 			<Platform
-				pax={game.state.platform.pax}
+				pax={state.platform.pax}
 				startPx={startPx}
 				pxPerAsu={pxPerAsu}
 				boardingPos={game.boardingPos}
+				selectedPax={selectedPax}
+				setSelected={setSelectedPax}
+				spawnPax={game.sendPaxToLoc}
 			/>
 			<Track
 				flip={false}
-				trackState={game.state.tracks[1]}
+				trackState={state.tracks[1]}
 				startPx={startPx}
 			/>
+			<Queue pax={state.paxQueue} setSelected={setSelectedPax} selectedPax={selectedPax} />
 		</main>
 	);
 }

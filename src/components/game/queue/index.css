@@ -1,0 +1,23 @@
+.queue {
+	position: fixed;
+	top: 40%;
+	bottom: 0;
+	right: 0;
+	width: 20px;
+	padding: 5px;
+	display: flex;
+	flex-direction: column-reverse;
+	align-items: center;
+	justify-content: flex-start;
+	gap: 10px;
+
+	background: white;
+}
+
+.queue .pax {
+	width: 20px;
+	height: 20px;
+	border-radius: 20px;
+	border: 2px black solid;
+	background: green;
+}

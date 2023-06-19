@@ -1,6 +1,6 @@
 import { Pos } from '../utils';
 import { BoardingPosType } from './boardingPos';
-import { PaxBase } from './pax';
+import { Pax, PaxBase } from './pax';
 
 export type TrackState = {
 	trainState: 'none' | 'arriving' | 'idle' | 'departing',
@@ -15,6 +15,7 @@ export type PlatformState = {
 }
 
 export type GameState = {
+	paxQueue: Pax[],
 	tracks: [TrackState, TrackState],
 	platform: PlatformState,
 }

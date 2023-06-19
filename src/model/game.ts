@@ -81,6 +81,7 @@ export default class TrainGame {
 			.filter((x): x is PaxBase => x !== null);
 		return {
 			tracks: this.tracks.map((x) => x.state) as [TrackState, TrackState],
+			paxQueue: this.paxQueue,
 			platform: {
 				pax: allPax,
 				upchargeStations: [],
@@ -92,18 +93,14 @@ export default class TrainGame {
 		return this.tracks.map((x) => x.boardingPos.flat(3)) as [BoardingPos[], BoardingPos[]];
 	}
 
-	sendPaxToLoc(pax: Pax, loc: Pos, callback?: () => void) {
+	sendPaxToLoc = (pax: Pax, loc: Pos, callback?: () => void) => {
 		if (!pax.isSpawned) {
 			this.paxQueue = this.paxQueue.filter((x) => x !== pax);
 			pax.spawn(this.spawnPos);
 			this.platformPax.add(pax);
 		}
 		pax.queueTarget(loc, callback);
-	}
-
-	testSpawnFirstPax() {
-		this.sendPaxToLoc(this.paxQueue[0], this.spawnPos);
-	}
+	};
 
 	private spawnDeboardedPax(pos: Pos, flip: boolean): void {
 		const p = new PaxBase();
