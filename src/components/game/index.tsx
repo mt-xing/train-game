@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import Track from './track';
 import Platform from './platform';
 import './index.css';
@@ -8,6 +8,8 @@ import TrainGame from '../../model/game';
 import { testLevel } from '../../levels';
 import Queue from './queue';
 import { Pax } from '../../model/pax';
+import DepartureBoard from './departureBoard';
+import { TrainConfig } from '../../model/train';
 
 const platformSize = [6 * (carLength + carGap), 100] as Pos;
 
@@ -72,6 +74,10 @@ function Game() {
 	const { state } = game;
 	const [selectedPax, setSelectedPax] = useState<null | Pax>(null);
 
+	const upcomingTrains = useMemo(() => state.tracks.map(
+		(t) => t.upcomingTrains
+	) as [TrainConfig[], TrainConfig[]], [state.tracks]);
+
 	return (
 		<main className="game">
 			<Track
@@ -94,6 +100,7 @@ function Game() {
 				startPx={startPx}
 			/>
 			<Queue pax={state.paxQueue} setSelected={setSelectedPax} selectedPax={selectedPax} />
+			<DepartureBoard departures={upcomingTrains} />
 		</main>
 	);
 }

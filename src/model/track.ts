@@ -63,7 +63,7 @@ export default class Track {
 		this.trains = trains.map((_, i, a) => a[a.length - i - 1]);
 		this.stationTrain = { state: 'none', lastTrainLeft: 0 };
 		this.timeGap = gap;
-		this.timeInitial = initial;
+		this.timeInitial = initial * (dir ? 1 : 1.5);
 		this.time = performance.now();
 		this.dir = dir;
 		this.spawnDeboardedPax = spawnDeboardedPax;
@@ -207,6 +207,7 @@ export default class Track {
 					trainCars: 0,
 					trainDoors: 0,
 					boardingPos: this.boardingPosConfigCache,
+					upcomingTrains: this.trains,
 				};
 			}
 			const nextTrain = this.trains[this.trains.length - 1];
@@ -215,6 +216,7 @@ export default class Track {
 				trainCars: nextTrain.cars,
 				trainDoors: nextTrain.doors,
 				boardingPos: this.boardingPosConfigCache,
+				upcomingTrains: this.trains,
 			};
 		}
 		return {
@@ -222,6 +224,7 @@ export default class Track {
 			trainCars: this.stationTrain.train.config.cars,
 			trainDoors: this.stationTrain.train.config.doors,
 			boardingPos: this.boardingPosConfigCache,
+			upcomingTrains: this.trains,
 		};
 	}
 

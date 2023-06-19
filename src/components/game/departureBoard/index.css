@@ -1,0 +1,8 @@
+.depBoard {
+	position: fixed;
+	top: 0;
+	bottom: 60%;
+	right: 0;
+	width: 20vw;
+	background: white;
+}
